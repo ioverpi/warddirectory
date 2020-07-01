@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Ward Directory</title>
+        <link href="https://fonts.googleapis.com/css?family=Arimo" rel="stylesheet">
+        <link rel="stylesheet" href="/styles.css">
+    </head>
+    <body>
+        <div id="app">
+            <div class="header">
+                <h1>32nd Ward Directory</h1>
+                <p v-if="user">Welcome {{user.username}}!<br><a href="#" @click="logout">Logout</a></p>
+                <p v-else><a href="#" @click="toggleForm">Register or Login</a></p>
+            </div>
+            <!--select>
+                <option selected="selected">Blah</option>
+                <option selected="false">Boo</option>
+            </select-->
+            <!--Login form-->
+            <transition v-if="showForm" name="modal">
+                <div class="modal-mask">
+                  <div class="modal-wrapper">
+                    <div class="modal-container">
+                      <div class="modal-header">
+                        <h1 class="modal-title">Register or Login</h1>
+                      </div>
+                      <div class="modal-body">
+                        <p v-if="error" class="error">{{error}}</p>
+                        <label>Username</label>
+                        <br />
+                        <input v-model="username">
+                        <br>
+                        <label>Password</label>
+                        <br>
+                        <input type="password" v-model="password">
+                      </div>
+                      <div class="modal-footer">
+                        <button @click="register" type="button">Register</button>
+                        <button @click="login" type="button" class="other">Login</button>
+                        <button @click="toggleForm" type="button" class="close">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </transition>
+
+            <!--Photo Editor-->
+            <transition v-if="showPhotoEditor" name="peditor">
+                <div class="peditor-mask">
+                    <div class="peditor-wrapper">
+                        <div class="peditor-container">
+                            <div class="peditor-header">
+                                <h1 class="peditor-title">Photo editor</h1>
+                            </div>
+                            <div class="peditor-body">
+                                <canvas id="canvas">The browser is too old.</canvas>
+                            </div>
+                            <div class="peditor-footer">
+                                <input type="file" ref="file" @change="loadImage">
+                                <button @click="saveImage" type="button">Save</button>
+                                <button @click="togglePhotoEditor" type="button" class="close">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <div class="content">
+                <h3>Ward members</h3>
+                <a style="float:right" href="/api/booklet">Generate Booklet</a>
+                <!--<div v-for="value in callings">
+                    <p>{{value}}</p>
+                </div>-->
+                <h4 @click="toggleTable('leadership', $event);">Leadership</h4>
+                <div v-if="currApt =='leadership'">
+                    <table style="width:800px">
+                        <tr>
+                            <th>Callings</th>
+                            <th>Name</th>
+                        </tr>
+                    </table>
+                    <div v-for="(value, category) in callings">
+                        <h4>{{category}}</h4>
+                        <table style="width:800px">
+                            <tr v-for="(member, name) in value">
+                                <td>{{name}}:</td>
+                                <td><span v-if="member">{{member.firstname}} {{member.lastname}}</span>
+                                    <button v-if="callingField != (category+name)" type="button" @click="callingField = (category+name)">Edit</button>
+                                    <select v-if="callingField == (category+name)" v-model="editId">
+                                        <option>Choose a member</option>
+                                        <option v-for="m in members" :value="m._id">{{m.firstname}} {{m.lastname}}</option>
+                                    </select>
+                                    <p v-if="callingField != (category+name) && (category == 'Bishopric' || name == 'Ward Clerk')">{{member.address}}</p>
+                                    <input v-if="callingField == (category+name) && (category == 'Bishopric' || name == 'Ward Clerk')" v-model="address" placeholder="Address">
+                                    <button v-if="callingField == (category+name)" @click="updateCalling(editId, category + ';' + name)">Save</button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <!--<table v-if="currApt =='leadership'">
+                    <tr>
+                        <th>Calling</th>
+                        <th>Name</th>
+                    </tr>
+                    <tr v-for="(value, name) in callings">
+                        <td>{{name}}</td>
+                        <tr>
+                            <td>{{name}}</td>
+                            <td>?</td>
+                        </tr>
+                        <tr v-for="calling in callings[category]">
+                            <td>{{calling}}: </td>
+                            <td>{{calling.firstname}} {{calling.lastname}}</td>
+                        </tr>
+                    </tr>
+                </table>-->
+                <div v-for="apartment in apartments">
+                    <h4 @click="toggleTable(apartment, $event)">{{apartment}}</h4>
+                    <table v-if="currApt == apartment">
+                        <tr>
+                            <th>Picture</th><!--This is a placeholder-->
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Email</th>
+                            <th>Phone Number</th>
+                            <!--<th>Apt #</th>Probably don't need this-->
+                        </tr>
+                        <tr v-for="member in getApartment(apartment)">
+                            <td v-if="member._id != editId"><img :src="'/photos/' + photoPath(member) + '.jpg?t=' + member.photo" :alt="photoAlt(member.firstname, member.lastname)"></td><!--This will also change-->
+                            <td v-else>
+                                <button v-if="apartment != 'Bishopric'" @click="togglePhotoEditor(member.photo)" type="button">Edit Photo</button>
+                                <input v-else type="file" ref="file2">
+                            </td>
+                            <td v-if="member._id != editId">{{member.firstname}}</td>
+                            <td v-else><input v-model="editedFirstname" placeholder="First Name"></td>
+                            <td v-if="member._id != editId">{{member.lastname}}</td>
+                            <td v-else><input v-model="editedLastname" placeholder="Last Name"></td>
+                            <td v-if="member._id != editId">{{member.email}}</td>
+                            <td v-else><input v-model="editedEmail" placeholder="Email"></td>
+                            <td v-if="member._id != editId">{{member.phone}}</td>
+                            <td v-else><input v-model="editedPhone" placeholder="Phone"></td>
+                            <!--<td v-if="member._id != editId">{{member.apt}}</td>Definitely will change...
+                            <td v-else><input v-model="editedApt" placeholder="Apartment"></td>-->
+                            <td>
+                                <select v-if="member._id == editId" v-model="editedApt">
+                                    <option>{{apartment}}</option>
+                                    <option v-for="n in apartments">{{n}}</option>
+                                </select>
+                                <br v-if="member._id == editId">
+                                <button v-if="member._id != editId" @click="editMember(member)" type="button">Edit</button>
+                                <button v-else type="button" @click="updateMember(member)">Save</button>
+                                <!--<div class="delete">-->
+                                    <button @click="deleteMember(member)" class="delete" type="button">Delete</button>
+                                <!--</div>-->
+                            </td>
+                        </tr>
+                        <tr v-if="addId == apartment">
+                        <!--<form @submit.prevent="addMember">-->
+                            <td v-if="apartment != 'Bishopric'">-></td>
+                            <td v-else><input type="file" ref="file2"></td>
+                            <td><input v-model="addedFirstname" placeholder="First Name"></td>
+                            <td><input v-model="addedLastname" placeholder="Last Name"></td>
+                            <td><input v-model="addedEmail" placeholder="Email"></td>
+                            <td><input v-model="addedPhone" placeholder="Phone"></td>
+                            <!--<td><input v-model="addedApt" placeholder="Apartment"></td>-->
+                            <td>
+                                <button @click="addMember(apartment)" type="button">Add</button>
+                                <button @click="showAddField('')" type="button">Cancel</button>
+                            </td>
+                        <!--</form>-->
+                        </tr>
+                        <tr v-else>
+                            <td><button @click="showAddField(apartment)" type="button">Add member</button></td>
+                        </tr>
+                    </table>
+                    <!--<button @click="generateBooklet" type="button">Generate Booklet</button>-->
+                </div>
+            </div>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js" integrity="sha256-mpnrJ5DpEZZkwkE1ZgkEQQJW/46CSEh/STrZKOB/qoM=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.7/vue.js" integrity="sha256-g+Q8DFAmG5+eyRPSydX0LY4TfjsL11XSDrIGerbbEdA=" crossorigin="anonymous"></script>
+        <script src="/script.js"></script>
+        <script src="/photos.js"></script>
+    </body>
+</html>
