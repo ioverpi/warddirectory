@@ -17,6 +17,8 @@ const memberSchema = new mongoose.Schema({
     address: String
 });
 
+var hello = "blah";
+
 const Member = mongoose.model("Member", memberSchema);
 
 router.get("/variables/:type", auth.verifyToken, async (req, res) => {
