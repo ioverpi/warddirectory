@@ -1,5 +1,17 @@
+# I don't need this.
 /.vs
+
+#These can probably be downloaded. 
 /node_modules
-/photos
+
+#These folders are needed for normal operation of my p
+photos/*
+server/booklets/*
+
+#Ensure creation of folders
+!photos/.gitkeep
+!server/booklets/.gitkeep
+
+#Test files that don't need be public.
 test.*
 test1.*
