@@ -17,7 +17,7 @@ const memberSchema = new mongoose.Schema({
     address: String
 });
 
-var hello = "blah";
+let test = "blah"; //I want to see if this works.
 
 const Member = mongoose.model("Member", memberSchema);
 
