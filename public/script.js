@@ -216,7 +216,7 @@ var app = new Vue({
             this.error = "";
             try{
                 let response = await axios.post("/api/users/login", {
-                    username: this.username,
+                    email: this.username,
                     password: this.password
                 });
                 this.user = response.data;

@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require('express');
 const bodyParser = require('body-parser');
 
@@ -20,6 +21,7 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 const auth = require("./auth.js");
+require("./member_model.js").makeModel();
 
 const members = require('./members.js');
 app.use("/api/members", members);
@@ -35,4 +37,4 @@ app.use("/api/photos", photos);
 const booklet = require("./booklet.js");
 app.use("/api/booklet", booklet);
 
-app.listen(4000, () => console.log("Listening on port 4000!"));
+app.listen(process.env.SERVER_PORT, () => console.log("Listening on port 4000!"));

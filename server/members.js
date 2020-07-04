@@ -6,20 +6,7 @@ const variables = require("./variables.js")
 
 // Members
 
-const memberSchema = new mongoose.Schema({
-    firstname: String,
-    lastname: String,
-    email: String,
-    phone: String,
-    apt: String,
-    photo: Number,
-    calling: String,
-    address: String
-});
-
-let test = "blah"; //I want to see if this works.
-
-const Member = mongoose.model("Member", memberSchema);
+const Member = mongoose.model("Member"); //, memberSchema);
 
 router.get("/variables/:type", auth.verifyToken, async (req, res) => {
     try{
