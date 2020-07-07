@@ -5,8 +5,7 @@ const router = express.Router();
 const auth = require("./auth.js");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-
-const SALT_WORK_FACTOR = 10;
+const path = require("path");
 
 // Users
 
@@ -94,6 +93,11 @@ async function genTokenSendEmail(user, res) {
         user.resetPasswordExpires = Date.now() + RESET_TOKEN_EXPIRATION;
         await user.save();
 
+        if(process.env.DEBUG_MODE) {
+            console.log(`${process.env.DEBUG_MODE?"http":"https"}://${process.env.SERVER_HOST}${(process.env.SERVER_PORT == 443 || process.env.SERVER_PORT == 80)?"":`:${process.env.SERVER_PORT}`}/api/users/reset/${token}`);
+            return;
+        }
+
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -104,22 +108,20 @@ async function genTokenSendEmail(user, res) {
 
         const mailOptions = {
             from: process.env.EMAIL_ADDRESS,
-            to: user.email,
+            to: `${process.env.DEBUG_MODE?"kellon08@gmail.com":user.email}`, //For now, we don't want mail going to anybodies address. Maybe change this later.
             subject: `Link to Reset Password`,
             text: 
 `You are receiving this because you (or someone else) have requested the reset of the password for your account or this is your first time signing in.
 
 Please click on the following link, or paste this into your browser to complete the process within one hour of receiving it:
 
-https://${process.env.SERVER_HOST}${(process.env.SERVER_PORT == 443)?"":`:${process.env.SERVER_PORT}`}/reset/${token}
+${process.env.DEBUG_MODE?"http":"https"}://${process.env.SERVER_HOST}${(process.env.SERVER_PORT == 443 || process.env.SERVER_PORT == 80)?"":`:${process.env.SERVER_PORT}`}/api/users/reset/${token}
 
 If you did not request this, please ignore this email and your password will remain unchanged.
 `
         }
 
         await transporter.sendMail(mailOptions);
-
-        return res.sendStatus(200);
     } catch(error) {
         console.log(error);
         return res.sendStatus(500);
@@ -137,12 +139,12 @@ router.post("/login", async (req, res) => {
         });
         if(!existingUser)
             return res.status(403).send({
-                message: "You are not in the database. Please contact [INSERT EMAIL OR PERSON HERE] for assistance."
+                message: `You are not in the database. Please contact ${process.env.EMAIL_ADDRESS} for assistance.`
             });
 
         if(existingUser.password == "") {
             await genTokenSendEmail(existingUser, res);
-            return res.status(403).send({
+            return res.status(200).send({
                 message: "This is your first time logging in. We have sent an email to you to set your password."
             });
         }
@@ -173,5 +175,60 @@ router.delete("/", auth.verifyToken, async (req, res) => {
     res.clearCookie("token");
     res.sendStatus(200);
 })
+
+router.post("/forgot_password", async (req, res) => {
+    try{
+        const user = await User.findOne({
+            email: req.body.email
+        });
+        genTokenSendEmail(user, res);
+        return res.status(200).send({
+            message: "We have sent an email to you to set your password."
+        });
+    } catch(error){
+        console.log(error);
+        return res.sendStatus(500);
+    }
+})
+
+router.get("/reset/:token", async (req, res) => {
+    try{
+        const user = await User.findOne({
+            resetPasswordToken: req.params.token,
+            resetPasswordExpires: {$gt: Date.now()}
+        });
+        if(!user)
+            return res.status(401).send({
+                message: "Password reset token is invalid or has expired."
+            });
+
+        res.sendFile(path.resolve("../public/reset_password.html"));
+    } catch(error){
+        console.log(error);
+        return res.sendStatus(500);
+    }
+});
+
+router.post("/reset/:token", async (req, res) => {
+    try{
+        const user = await User.findOne({
+            resetPasswordToken: req.params.token,
+            resetPasswordExpires: {$gt: Date.now()}
+        });
+        if(!user)
+            return res.status(401).send({
+                message: "Password reset token is invalid or has expired."
+            });
+
+        user.password = req.body.password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+        return res.status(200).send("Password reset successful! You may close this page.")
+    } catch(error){
+        console.log(error);
+        return res.sendStatus(500);
+    }
+});
 
 module.exports = router;

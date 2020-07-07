@@ -166,6 +166,10 @@ body {
   .error {
     color: #B2261C;
   }
+
+  .message {
+    color: #00bb00
+  }
   
   input, textarea, select, button {
     font-family: 'Arimo', sans-serif;

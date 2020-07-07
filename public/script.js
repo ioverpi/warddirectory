@@ -8,6 +8,7 @@ var app = new Vue({
         username: "",
         password: "",
         error: "",
+        message: "",
         addedFirstname: "",
         addedLastname: "",
         addedEmail: "",
@@ -178,6 +179,7 @@ var app = new Vue({
         },
         toggleForm(){
             this.error = "";
+            this.message = "";
             this.username = "";
             this.password = "";
             this.showForm = !this.showForm;
@@ -199,6 +201,7 @@ var app = new Vue({
                 this.getMembers();
             }
         },
+        /*
         async register(){
             this.error = "";
             try{
@@ -212,6 +215,18 @@ var app = new Vue({
                 this.error = error.response.data.message;
             }
         },
+        */
+        async forgotPassword(){
+            this.error = "";
+            try{
+                let response = await axios.post("/api/users/forgot_password", {
+                    email: this.username
+                });
+                this.message = response.data.message;
+            } catch(error){
+                this.error = error.response.data.message;
+            }
+        },
         async login(){
             this.error = "";
             try{
@@ -219,6 +234,10 @@ var app = new Vue({
                     email: this.username,
                     password: this.password
                 });
+                if(response.data.message) {
+                    this.message = response.data.message;
+                    return;
+                }
                 this.user = response.data;
                 this.getMembers();
                 this.toggleForm();

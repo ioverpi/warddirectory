@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const auth = require("./auth.js");
 
+const SALT_WORK_FACTOR = 10;
+
 const userSchema = new mongoose.Schema({ //We are letting the member schema take the place of the user schema. 
     firstname: String,
     lastname: String,
