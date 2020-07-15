@@ -2,7 +2,8 @@ const mongoose = require("mongoose");
 const auth = require("./auth.js");
 const express = require("express");
 const router = express.Router();
-const variables = require("./variables.js")
+const variables = require("./variables.js");
+const auth2 = require("./auth2.js");
 
 // Members
 
@@ -30,14 +31,15 @@ router.get("/", auth.verifyToken, async (req, res) => {
     }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async (req, res) => {
     const member = new Member({
         firstname: req.body.firstname,
         lastname: req.body.lastname,
         email: req.body.email,
         phone: req.body.phone,
         apt: req.body.apt,
-        photo: 0
+        photo: 0,
+        permissions: 0
     });
     try{
         await member.save();
@@ -49,7 +51,7 @@ router.post("/", async (req, res) => {
     }
 });
 
-router.post("/update", auth.verifyToken, async (req, res) => {
+router.post("/update", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async (req, res) => {
     try{
         const member = await Member.findOne({
             _id: req.body.id
@@ -59,7 +61,8 @@ router.post("/update", auth.verifyToken, async (req, res) => {
         member.email = req.body.email;
         member.phone = req.body.phone;
         member.apt = req.body.apt;
-
+        if(req.body.address) member.address = req.body.address;
+        
         await member.save();
         return res.send(member);
     } catch(error){
@@ -69,7 +72,7 @@ router.post("/update", auth.verifyToken, async (req, res) => {
     
 });
 
-router.post("/calling", auth.verifyToken, async (req, res) => {
+router.post("/calling", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async (req, res) => {
     try{
         const member = await Member.findById(req.body.id);
         const oldMember = await Member.findOne({
@@ -88,7 +91,7 @@ router.post("/calling", auth.verifyToken, async (req, res) => {
     }
 });
 
-router.post("/address", auth.verifyToken, async (req, res) => {
+router.post("/address", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async (req, res) => {
     try{
         const member = await Member.findById(req.body.id);
         member.address = req.body.address;
@@ -106,7 +109,25 @@ router.post("/address", auth.verifyToken, async (req, res) => {
 //     }
 // })
 
-router.delete("/:id", auth.verifyToken, async (req, res) => {
+router.post("/permissions", auth.verifyToken, async (req, res) => {
+    try{
+        const currentUser = await Member.findById(req.user_id);
+        if(req.body.permissions < currentUser.permissions){
+            const member = await Member.findById(req.body.id);
+            member.permissions = req.body.permissions;
+            await member.save();
+            return res.sendStatus(200);
+        }
+        return res.status(403).send({
+            message: "Failed to authenticate token."
+        });
+    } catch(error){
+        console.log(error);
+        return res.sendStatus(500);
+    }
+});
+
+router.delete("/:id", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async (req, res) => {
     try{
         await Member.deleteOne({
             _id: req.params.id

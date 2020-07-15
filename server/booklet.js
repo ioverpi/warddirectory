@@ -61,6 +61,15 @@ function genPages(num){
     return "{" + arr.join() + "}";
 }
 
+function parseString(str, variables){ //This might come in handy. 
+	for(x in variables){
+		str = str.replace(new RegExp("{{"+x+"}}", "g"), variables[x]);
+	}
+	let missingArgument = str.match(/{{(([^}][^}]?|[^}]}?)*)}}/);
+	if(missingArgument) throw "Missing a value for the argument " + missingArgument[1] + "."
+	return str;
+}
+
 async function createPDF(bookletString){
     var filename = "test.tek";
     try{

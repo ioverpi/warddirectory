@@ -1,3 +1,60 @@
+html {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+.sidebar {
+  width:200px; 
+  height:100%; 
+  position:fixed; 
+  z-index:1; 
+  overflow:auto;
+}
+
+.sidebarinner {
+  top:0; 
+  position:fixed; 
+  padding-top:100px; 
+  padding-bottom:0; 
+  height:100%; 
+  width:220px;
+}
+
+.sidebarinnerinner {
+  height:100%; 
+  width:100%; 
+  overflow-y: scroll; 
+  overflow-x: hidden; 
+  background: #eeeeee;
+}
+
+.sidebar h4 {
+  padding: 2px 1px 1px 28px;
+  margin: 15px 0px 15px 0px;
+}
+
+.sidebar p {
+  padding: 6px 1px 5px 32px;
+  margin: 0;
+  /*margin: 10px 0px 10px 0px;*/
+  cursor: pointer;
+}
+
+.option {
+  cursor: pointer;
+}
+
+.sidebar p:hover, .option:hover {
+  background: #aaaaaa;
+}
+
+.active {
+  background: #aaaaaa;
+}
+
 body {
     font-family: 'Arimo', sans-serif;
     font-size: 16px;
@@ -21,6 +78,43 @@ body {
   /* Content */
   .content {
     padding: 20px 100px 0px 100px;
+    margin: 0px 0px 0px 220px;
+  }
+
+  .put-in-content {
+    display:flex;
+    flex-wrap: wrap;
+  }
+
+  .member-info {
+    position: relative;
+    background: #eeeeee;
+    padding: 10px;
+    margin: 10px;
+    border: 1px solid #aaaaaa;
+  }
+
+  .member-info p {
+    text-align:center;
+  }
+
+  .control {
+    width: 300px
+  }
+
+  .edit-options {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /*margin: 7px 0px 7px 0px;*/
+    padding: 5px;
+    background: rgba(0, 0, 0, .2);
+    width: 100%;
+    height: 70px;
+  }
+
+  .input-block > input {
+    display:block;
   }
   
   /* Login Form */

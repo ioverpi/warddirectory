@@ -20,8 +20,8 @@ mongoose.connect(process.env.MONGO_DB_URL, {
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
-const auth = require("./auth.js");
 require("./member_model.js").makeModel();
+const auth = require("./auth.js");
 
 const members = require('./members.js');
 app.use("/api/members", members);
