@@ -39,7 +39,9 @@ router.post("/", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async (req
         phone: req.body.phone,
         apt: req.body.apt,
         photo: 0,
-        permissions: 0
+        permissions: 0,
+        ward: req.user_ward,
+        password: "" //Maybe change the users.js instead of changing this. 
     });
     try{
         await member.save();

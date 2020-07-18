@@ -18,7 +18,8 @@ const userSchema = new mongoose.Schema({ //We are letting the member schema take
     tokens: [], 
     permissions: Number, 
     resetPasswordToken: String,
-    resetPasswordExpires: Number
+    resetPasswordExpires: Number,
+    ward: String
 });
 
 userSchema.pre("save", async function(next){

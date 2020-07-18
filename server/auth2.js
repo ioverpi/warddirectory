@@ -10,6 +10,7 @@ const permissionsGreaterThan = (level) => {
             const currentUser = await Member.findOne({
                 _id: req.user_id
             });
+            req.user_ward = currentUser.ward;
             //console.log(`${currentUser.firstname}, ${currentUser.permissions}, ${level}`);
             if(!(currentUser.permissions > level)) {
                 throw new Error("Permission level not high enough.");

@@ -18,3 +18,4 @@ test1.*
 
 #Credentials
 *.env
+*.envbackup

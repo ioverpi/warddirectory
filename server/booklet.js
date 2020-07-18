@@ -66,7 +66,7 @@ function parseString(str, variables){ //This might come in handy.
 		str = str.replace(new RegExp("{{"+x+"}}", "g"), variables[x]);
 	}
 	let missingArgument = str.match(/{{(([^}][^}]?|[^}]}?)*)}}/);
-	if(missingArgument) throw "Missing a value for the argument " + missingArgument[1] + "."
+	if(missingArgument) throw new Error("Missing a value for the argument " + missingArgument[1] + ".");
 	return str;
 }
 

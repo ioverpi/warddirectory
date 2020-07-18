@@ -12,7 +12,6 @@ app.use(express.static('../public'));
 
 const mongoose = require('mongoose');
 
-//Probably change this line. It needs to be dynamic.
 mongoose.connect(process.env.MONGO_DB_URL, {
     useNewUrlParser: true
 });
@@ -21,10 +20,15 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 require("./member_model.js").makeModel();
+require("./ward_model.js").makeModel();
 const auth = require("./auth.js");
 
 const members = require('./members.js');
 app.use("/api/members", members);
+
+const info = require('./info.js');
+app.use("/api/info", info);
+
 const users = require("./users.js");
 app.use("/api/users", users);
 

@@ -1,6 +1,7 @@
 var app = new Vue({
     el: "#app",
     data: {
+        wardName: "",
         address: "",
         showForm: false,
         showPhotoEditor: false,
@@ -37,6 +38,7 @@ var app = new Vue({
     async created(){
         this.getUser();
         this.getApartmentList();
+        this.getWardName();
         await this.getMembers();
         //this.getCallings();
     },
@@ -83,7 +85,7 @@ var app = new Vue({
         },
         async getApartmentList(){
             try{
-                let response = await axios.get("/api/members/variables/apartments");
+                let response = await axios.get("/api/info/apartments");
                 this.apartments = response.data.apartments.filter(m => m != "Bishopric");
             } catch(error){
                 console.log(error);
@@ -91,7 +93,7 @@ var app = new Vue({
         },
         async getCallings(){
             try{
-                let response = await axios.get("/api/members/variables/callings");
+                let response = await axios.get("/api/info/callings");
                 this.callings = response.data.callings;
                 for(member in this.members){
                     if(this.members[member].calling){
@@ -99,6 +101,14 @@ var app = new Vue({
                         this.callings[temp[0]][temp[1]] = this.members[member];
                     }
                 }
+            } catch(error){
+                console.log(error);
+            }
+        },
+        async getWardName(){
+            try{
+                let response = await axios.get("/api/info/name");
+                this.wardName = response.data.name;
             } catch(error){
                 console.log(error);
             }
@@ -296,6 +306,7 @@ var app = new Vue({
                 }
                 this.user = response.data;
                 this.getApartmentList();
+                this.getWardName();
                 this.getMembers();
                 this.toggleForm();
             } catch(error){
@@ -311,6 +322,7 @@ var app = new Vue({
                 this.apartments = null;
                 this.currApt = null;
                 this.callings = null;
+                this.wardName = "";
                 //this.getMembers(); //Do something different.
             } catch(error){
                 //Party!

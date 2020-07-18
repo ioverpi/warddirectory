@@ -8,7 +8,7 @@
     <body style="position: relative">
         <div id="app">
             <div class="header">
-                <h1>32nd Ward Directory</h1>
+                <h1>The {{wardName}} Ward Directory</h1>
                 <p v-if="user">Welcome {{user.firstname}} {{user.lastname}}!<br><a href="#" @click="logout">Logout</a></p>
                 <p v-else><a href="#" @click="toggleForm">Login</a></p>
             </div>
