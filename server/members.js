@@ -2,23 +2,11 @@ const mongoose = require("mongoose");
 const auth = require("./auth.js");
 const express = require("express");
 const router = express.Router();
-const variables = require("./variables.js");
 const auth2 = require("./auth2.js");
 
 // Members
 
 const Member = mongoose.model("Member"); //, memberSchema);
-
-router.get("/variables/:type", auth.verifyToken, async (req, res) => {
-    try{
-        let response = {};
-        response[req.params.type] = variables[req.params.type];
-        return res.send(response);
-    } catch(error){
-        console.log(error);
-        return res.sendStatus(500);
-    }
-});
 
 router.get("/", auth.verifyToken, async (req, res) => {
     try{
@@ -80,6 +68,7 @@ router.post("/calling", [auth.verifyToken, auth2.permissionsGreaterThan(0)], asy
         const oldMember = await Member.findOne({
             calling: req.body.calling
         });
+        if(oldMember && req.body.id == oldMember._id) return res.sendStatus(200);
         if(oldMember){
             oldMember.calling = "";
             await oldMember.save();
@@ -87,18 +76,6 @@ router.post("/calling", [auth.verifyToken, auth2.permissionsGreaterThan(0)], asy
         member.calling = req.body.calling;
         await member.save();
         return res.send(member);
-    } catch(error){
-        console.log(error);
-        return res.sendStatus(500);
-    }
-});
-
-router.post("/address", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async (req, res) => {
-    try{
-        const member = await Member.findById(req.body.id);
-        member.address = req.body.address;
-        await member.save();
-        return res.sendStatus(200);
     } catch(error){
         console.log(error);
         return res.sendStatus(500);

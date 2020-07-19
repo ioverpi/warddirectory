@@ -36,7 +36,7 @@
                         <input type="password" v-model="password">
                       </div>
                       <div class="modal-footer">
-                        <button @click="forgotPassword" type="button">Reset Password</button>
+                        <button @click="forgotPassword" type="button">{{additionalLoginMessage}}</button>
                         <button @click="login" type="button" class="other">Login</button>
                         <button @click="toggleForm" type="button" class="close">Close</button>
                       </div>
@@ -68,7 +68,7 @@
 
             <div class="sidebar">
                 <div class="sidebarinner">
-                    <div class="sidebarinnerinner">
+                    <div v-if="user" class="sidebarinnerinner">
                         <h4 class="option" @click="filterMembers('Bishopric')" :class="(currApt == 'Bishopric') ? 'active' : false">Bishopric</h4>
                         <h4 class="option" @click="showLeadership()" :class="(currApt == 'leadership') ? 'active' : false">Leadership</h4>
                         <h4>Apartments</h4>
@@ -143,8 +143,6 @@
                                         <option>Choose a member</option>
                                         <option v-for="m in members" :value="m._id">{{m.firstname}} {{m.lastname}}</option>
                                     </select>
-                                    <p v-if="callingField != (category+name) && (category == 'Bishopric' || name == 'Ward Clerk')">{{member.address}}</p>
-                                    <input v-if="callingField == (category+name) && (category == 'Bishopric' || name == 'Ward Clerk')" v-model="address" placeholder="Address">
                                     <button v-if="callingField == (category+name)" @click="updateCalling(editId, category + ';' + name)">Save</button>
                                 </td>
                             </tr>
@@ -152,7 +150,9 @@
                     </div>
                 </div>
             </div>
+            <!-- Not ready for this yet. 
             <a style="float:right" href="/api/booklet">Generate Booklet</a>
+            -->
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js" integrity="sha256-mpnrJ5DpEZZkwkE1ZgkEQQJW/46CSEh/STrZKOB/qoM=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.7/vue.js" integrity="sha256-g+Q8DFAmG5+eyRPSydX0LY4TfjsL11XSDrIGerbbEdA=" crossorigin="anonymous"></script>

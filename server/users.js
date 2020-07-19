@@ -129,8 +129,10 @@ If you did not request this, please ignore this email and your password will rem
 
 }
 
+const obscureAuthMessage = `Email or password is wrong. Please contact ${process.env.EMAIL_ADDRESS} for assistance.`;
+
 router.post("/login", async (req, res) => {
-    if(!req.body.email || !req.body.password) //I want an email instead of a username now. 
+    if(!req.body.email) //I want an email instead of a username now. 
         return res.sendStatus(400);
 
     try{
@@ -139,19 +141,21 @@ router.post("/login", async (req, res) => {
         });
         if(!existingUser)
             return res.status(403).send({
-                message: `You are not in the database. Please contact ${process.env.EMAIL_ADDRESS} for assistance.`
+                message: obscureAuthMessage
             });
 
-        if(existingUser.password == "") {
+        if(!existingUser.password) {
             await genTokenSendEmail(existingUser, res);
             return res.status(200).send({
                 message: "This is your first time logging in. We have sent an email to you to set your password."
             });
         }
 
+        if(!req.body.password) return res.sendStatus(400);
+
         if(!await existingUser.comparePassword(req.body.password))
             return res.status(403).send({
-                message: "email or password is wrong"
+                message: obscureAuthMessage
             });
 
         login(existingUser, res);
@@ -180,6 +184,9 @@ router.post("/forgot_password", async (req, res) => {
     try{
         const user = await User.findOne({
             email: req.body.email
+        });
+        if(!user) return res.status(403).send({
+            message: obscureAuthMessage
         });
         genTokenSendEmail(user, res);
         return res.status(200).send({

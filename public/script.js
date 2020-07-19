@@ -33,7 +33,8 @@ var app = new Vue({
         currMember: {},
         callings: {},
         callingField: "",
-        plainPhoto: null
+        plainPhoto: null,
+        additionalLoginMessage: "First time logging in?"
     },
     async created(){
         this.getUser();
@@ -248,6 +249,7 @@ var app = new Vue({
             this.message = "";
             this.username = "";
             this.password = "";
+            this.additionalLoginMessage = "First time logging in?";
             this.showForm = !this.showForm;
         },
         async togglePhotoEditor(hasPhoto){
@@ -291,6 +293,7 @@ var app = new Vue({
                 this.message = response.data.message;
             } catch(error){
                 this.error = error.response.data.message;
+                this.additionalLoginMessage = "Reset password?"
             }
         },
         async login(){
@@ -311,6 +314,7 @@ var app = new Vue({
                 this.toggleForm();
             } catch(error){
                 this.error = error.response.data.message;
+                this.additionalLoginMessage = "Reset password?"
             }
         },
         async logout(){
@@ -397,13 +401,6 @@ var app = new Vue({
                     calling: newCalling
                 });
                 let temp = newCalling.split(";");
-                if(temp[0] == "Bishopric" || temp[1] == "Ward Clerk"){
-                    await axios.post("/api/members/address", {
-                        id: memberId,
-                        address: this.address
-                    });
-                    this.address = "";
-                }
                 //this.callings[temp[0]][temp[1]] = member;
                 await this.getMembers();
                 this.getCallings();
