@@ -67,7 +67,7 @@
             </transition>
 
             <div class="sidebar">
-                <div class="sidebarinner">
+                <div class="sidebarinner" id="leftMenu">
                     <div v-if="user" class="sidebarinnerinner">
                         <h4 class="option" @click="filterMembers('Bishopric')" :class="(currApt == 'Bishopric') ? 'active' : false">Bishopric</h4>
                         <h4 class="option" @click="showLeadership()" :class="(currApt == 'leadership') ? 'active' : false">Leadership</h4>
@@ -149,7 +149,21 @@
                         </table>
                     </div>
                 </div>
+
+                <p v-if="user && !currApt">
+                    Welcome! To get started, click one of the apartments to the left. 
+                    If you want to download the booklet, I will have that ready in a couple weeks. 
+                    If you find any errors or if you do not want certain information to be displayed, 
+                    you may contact the current Ward Clerk over Membership. 
+                </p>
             </div>
+
+            <p v-if="!user" style="margin: 0px 200px">
+                Welcome to the Ward Directory! If you have an account, you can click on Login and enter your email address 
+                to proceed. If you attempt to login but can't, instructions will be shown indicating what you should do. 
+                If you do not have an account, I will soon provide an example login to see the features of this application. 
+                I hope you find this useful!
+            </p>
             <!-- Not ready for this yet. 
             <a style="float:right" href="/api/booklet">Generate Booklet</a>
             -->

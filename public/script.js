@@ -413,3 +413,8 @@ var app = new Vue({
         }
     }
 })
+
+window.onscroll = function() {
+    console.log(window.pageYOffset);
+    document.getElementById("leftMenu").style.paddingTop = (window.pageYOffset > 100)? 0 : (100 - window.pageYOffset) + "px";
+}

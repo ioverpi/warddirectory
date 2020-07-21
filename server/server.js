@@ -14,6 +14,10 @@ const mongoose = require('mongoose');
 
 mongoose.connect(process.env.MONGO_DB_URL, {
     useNewUrlParser: true
+}).catch(error => {
+    console.log("Cannot connect to the database server. Doesn't make sense to start.");
+    console.log(error);
+    server.close(() => {console.log("Shut down complete.")})
 });
 
 const cookieParser = require('cookie-parser');
@@ -41,4 +45,4 @@ app.use("/api/photos", photos);
 const booklet = require("./booklet.js");
 app.use("/api/booklet", booklet);
 
-app.listen(process.env.SERVER_PORT, () => console.log(`Listening on port ${process.env.SERVER_PORT}!`));
+const server = app.listen(process.env.SERVER_PORT, () => console.log(`Listening on port ${process.env.SERVER_PORT}!`));
