@@ -5,7 +5,7 @@ const router = express.Router();
 const fs = require("fs").promises;
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
-const variables = require("./variables.js");
+//const variables = require("./variables.js"); //TODO: Need to fix this.
 
 // Booklet
 
@@ -59,6 +59,15 @@ function genPages(num){
     }
     
     return "{" + arr.join() + "}";
+}
+
+function parseString(str, variables){ //This might come in handy. 
+	for(x in variables){
+		str = str.replace(new RegExp("{{"+x+"}}", "g"), variables[x]);
+	}
+	let missingArgument = str.match(/{{(([^}][^}]?|[^}]}?)*)}}/);
+	if(missingArgument) throw new Error("Missing a value for the argument " + missingArgument[1] + ".");
+	return str;
 }
 
 async function createPDF(bookletString){

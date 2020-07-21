@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 // We define a random secret here to use for signing JWTs
 // You should NOT do this normally. You don't want to hard code
 // secret values into your code.
-let secret = "RANDOMSECRETCHANGETHIS";
+// let secret = "RANDOMSECRETCHANGETHIS";
 
 // Instead, you should define the value in a file called ".env".
 // Then call "source .env" to put this into the environment
@@ -12,7 +12,7 @@ let secret = "RANDOMSECRETCHANGETHIS";
 // export jwtSecret="RANDOMSECRETCHANGETHIS"
 // We would read this secret with the lne below:
 
-// let secret = process.env.jwtSecret;
+let secret = process.env.JWT_SECRET;
 
 if (secret === undefined) {
   console.log("You need to define a jwtSecret environment variable to continue.");

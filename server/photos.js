@@ -4,6 +4,7 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs").promises;
 const path = require("path");
+const auth2 = require("./auth2.js");
 
 const multer = require("multer");
 const upload = multer({ dest: "uploads/"});
@@ -55,7 +56,7 @@ async function incrementPhotoCounter(id){
     await member.save();
 }
 
-router.post("/", upload.single("photo"), async (req, res) => {
+router.post("/", [auth.verifyToken, auth2.permissionsGreaterThan(0), upload.single("photo")], async (req, res) => {
     try{
         if(path.extname(req.file.originalname).toLowerCase() === ".jpg"){
             let newFilename = "";
@@ -106,7 +107,7 @@ router.post("/", upload.fields([{name: "new", maxCount: 1}, {name: "old", maxCou
 });
 */
 
-router.delete("/:id", auth.verifyToken, async (req, res) => {
+router.delete("/:id", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async (req, res) => {
     try{
         var filename = "../photos/" + req.params.id + ".jpg";
         await fs.unlink(filename);

@@ -15,3 +15,7 @@ server/booklets/*
 #Test files that don't need be public.
 test.*
 test1.*
+
+#Credentials
+*.env
+*.envbackup

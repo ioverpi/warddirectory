@@ -1,6 +1,7 @@
 var app = new Vue({
     el: "#app",
     data: {
+        wardName: "",
         address: "",
         showForm: false,
         showPhotoEditor: false,
@@ -8,6 +9,7 @@ var app = new Vue({
         username: "",
         password: "",
         error: "",
+        message: "",
         addedFirstname: "",
         addedLastname: "",
         addedEmail: "",
@@ -17,23 +19,29 @@ var app = new Vue({
         editedLastname: "",
         editedEmail: "",
         editedPhone: "",
+        permissionLevel: 0,
         //editedApt: "",
         members: {},
+        memberSubset: [],
         editId: "",
         addId: "",
+        showAddTile: false,
         memberId: "",
         reloadImage: 0,
         apartments: [],
         currApt: "",
+        currMember: {},
         callings: {},
-        callingField: ""//,
-        //tempMember: {}
+        callingField: "",
+        plainPhoto: null,
+        additionalLoginMessage: "First time logging in?"
     },
     async created(){
         this.getUser();
         this.getApartmentList();
+        this.getWardName();
         await this.getMembers();
-        this.getCallings();
+        //this.getCallings();
     },
     methods: {
         getApartment(aptnumber){
@@ -52,17 +60,41 @@ var app = new Vue({
             this.currApt = aptnumber;
             event.target.scrollIntoView();
         },
+        filterMembers(aptnumber){
+            this.currApt = aptnumber;
+            this.memberSubset = this.members.filter(m => m.apt == aptnumber);
+        },
+        async showLeadership(){
+            this.currApt = "leadership";
+            this.memberSubset = null;
+            await this.getCallings();
+        },
+        showBishopric(){
+            this.currApt = "Bishopric";
+            //Something...
+        },
+        showAddButton(){
+            if(!this.currApt || this.currApt == "leadership"){
+                return false;
+            }
+            if(this.user != null){
+                if(this.user.permissions > 0) {
+                    return true;
+                }
+            }
+            return false;
+        },
         async getApartmentList(){
             try{
-                let response = await axios.get("/api/members/variables/apartments");
-                this.apartments = response.data.apartments;
+                let response = await axios.get("/api/info/apartments");
+                this.apartments = response.data.apartments.filter(m => m != "Bishopric");
             } catch(error){
                 console.log(error);
             }
         },
         async getCallings(){
             try{
-                let response = await axios.get("/api/members/variables/callings");
+                let response = await axios.get("/api/info/callings");
                 this.callings = response.data.callings;
                 for(member in this.members){
                     if(this.members[member].calling){
@@ -74,13 +106,25 @@ var app = new Vue({
                 console.log(error);
             }
         },
+        async getWardName(){
+            try{
+                let response = await axios.get("/api/info/name");
+                this.wardName = response.data.name;
+            } catch(error){
+                console.log(error);
+            }
+        },
         async getMembers(){
             try{
                 let response = await axios.get("/api/members");
                 this.members = response.data;
+                this.filterMembers(this.currApt);
             } catch(error){
                 console.log(error);
             }
+        },
+        loadFile(event) {
+            this.plainPhoto = event.target.files[0];
         },
         async addMember(apartment){
             try{
@@ -102,9 +146,9 @@ var app = new Vue({
                     this.editId = response.data._id;
                     this.togglePhotoEditor(0);
                 } else {
-                    if(this.$refs.file2[0].files.length > 0){
+                    if(this.plainPhoto){
                         let formData = new FormData();
-                        formData.append("photo", this.$refs.file2[0].files[0], response.data._id + ".jpg");
+                        formData.append("photo", this.plainPhoto, response.data._id + ".jpg");
                         formData.append("photoType", "leadership");
                         formData.append("id", response.data._id);
                         /*let response = */await axios.post("/api/photos", formData, {
@@ -113,6 +157,7 @@ var app = new Vue({
                     }
                     this.getMembers();
                 }
+                this.toggleAddField();
                 //this.getMembers();
             } catch(error){
                 console.log(error);
@@ -120,6 +165,10 @@ var app = new Vue({
         },
         showAddField(apartment){
             this.addId = apartment;
+        },
+        toggleAddField() {
+            this.plainPhoto = null; //Reset the photo for Bishopric members. 
+            this.showAddTile = !this.showAddTile;
         },
         async editMember(member){
             if(this.user){
@@ -129,6 +178,8 @@ var app = new Vue({
                 this.editedEmail = member.email;
                 this.editedPhone = member.phone;
                 this.editedApt = member.apt;
+                this.permissionLevel = member.permissions;
+                this.address = member.address?member.address:"";
             }else{
                 this.toggleForm();
             }
@@ -141,7 +192,8 @@ var app = new Vue({
                     email: this.editedEmail,
                     phone: this.editedPhone,
                     apt: this.editedApt,
-                    id: member._id
+                    id: member._id,
+                    address: this.address
                 })
                 this.editedFirstname = "";
                 this.editedLastname = "";
@@ -149,6 +201,7 @@ var app = new Vue({
                 this.editedPhone = "";
                 this.editedApt = "";
                 this.editId = "";
+                this.address = "";
                 if(this.$refs.file2){
                     let formData = new FormData();
                     formData.append("photo", this.$refs.file2[0].files[0], response.data._id + ".jpg");
@@ -172,14 +225,31 @@ var app = new Vue({
                 let response = await axios.delete("/api/members/" + member._id);
                 this.getMembers();
             } catch(error){
-                this.toggleForm();
+                //this.toggleForm();
                 console.log(error);
             }
         },
+        async changePermissions(member){
+            try{
+                let response = await axios.post("/api/members/permissions", {
+                    id: member._id,
+                    permissions: this.permissionLevel
+                });
+                this.editId = "";
+                this.getMembers();
+            } catch(error){
+                console.log(error);
+            }
+        },
+        hasPermissions(member){
+            return (this.user && this.user.permissions > 1 && member.permissions < this.user.permissions);
+        },
         toggleForm(){
             this.error = "";
+            this.message = "";
             this.username = "";
             this.password = "";
+            this.additionalLoginMessage = "First time logging in?";
             this.showForm = !this.showForm;
         },
         async togglePhotoEditor(hasPhoto){
@@ -199,6 +269,7 @@ var app = new Vue({
                 this.getMembers();
             }
         },
+        /*
         async register(){
             this.error = "";
             try{
@@ -212,24 +283,50 @@ var app = new Vue({
                 this.error = error.response.data.message;
             }
         },
+        */
+        async forgotPassword(){
+            this.error = "";
+            try{
+                let response = await axios.post("/api/users/forgot_password", {
+                    email: this.username
+                });
+                this.message = response.data.message;
+            } catch(error){
+                this.error = error.response.data.message;
+                this.additionalLoginMessage = "Reset password?"
+            }
+        },
         async login(){
             this.error = "";
             try{
                 let response = await axios.post("/api/users/login", {
-                    username: this.username,
+                    email: this.username,
                     password: this.password
                 });
+                if(response.data.message) {
+                    this.message = response.data.message;
+                    return;
+                }
                 this.user = response.data;
+                this.getApartmentList();
+                this.getWardName();
                 this.getMembers();
                 this.toggleForm();
             } catch(error){
                 this.error = error.response.data.message;
+                this.additionalLoginMessage = "Reset password?"
             }
         },
         async logout(){
             try{
                 let response = await axios.delete("/api/users");
                 this.user = null;
+                this.memberSubset = null;
+                this.members = null;
+                this.apartments = null;
+                this.currApt = null;
+                this.callings = null;
+                this.wardName = "";
                 //this.getMembers(); //Do something different.
             } catch(error){
                 //Party!
@@ -304,13 +401,6 @@ var app = new Vue({
                     calling: newCalling
                 });
                 let temp = newCalling.split(";");
-                if(temp[0] == "Bishopric" || temp[1] == "Ward Clerk"){
-                    await axios.post("/api/members/address", {
-                        id: memberId,
-                        address: this.address
-                    });
-                    this.address = "";
-                }
                 //this.callings[temp[0]][temp[1]] = member;
                 await this.getMembers();
                 this.getCallings();
@@ -323,3 +413,8 @@ var app = new Vue({
         }
     }
 })
+
+window.onscroll = function() {
+    console.log(window.pageYOffset);
+    document.getElementById("leftMenu").style.paddingTop = (window.pageYOffset > 100)? 0 : (100 - window.pageYOffset) + "px";
+}
