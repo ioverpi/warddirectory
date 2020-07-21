@@ -6,6 +6,8 @@ html {
   box-sizing: inherit;
 }
 
+/* Sidebar */
+
 .sidebar {
   width:200px; 
   height:100%; 
@@ -79,13 +81,10 @@ body {
   .content {
     padding: 20px 100px 0px 100px;
     margin: 0px 0px 0px 220px;
-  }
-
-  .put-in-content {
     display:flex;
     flex-wrap: wrap;
   }
-
+  
   .member-info {
     position: relative;
     background: #eeeeee;

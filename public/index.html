@@ -77,7 +77,7 @@
                 </div>
             </div>
 
-            <div class="content put-in-content">
+            <div class="content">
                 <div v-for="member in memberSubset" @mouseover="currMember = member._id" @mouseleave="currMember = ''" class="member-info">
                     <img :src="'/photos/' + photoPath(member) + '.jpg?t=' + member.photo" :alt="photoAlt(member.firstname, member.lastname)" :class="(currApt == 'Bishopric')? 'control' : false">
                     <div v-if="member._id != editId">
