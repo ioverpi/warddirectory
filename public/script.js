@@ -202,9 +202,9 @@ var app = new Vue({
                 this.editedApt = "";
                 this.editId = "";
                 this.address = "";
-                if(this.$refs.file2){
+                if(this.plainPhoto){
                     let formData = new FormData();
-                    formData.append("photo", this.$refs.file2[0].files[0], response.data._id + ".jpg");
+                    formData.append("photo", this.plainPhoto, response.data._id + ".jpg");
                     formData.append("photoType", "leadership");
                     formData.append("id", response.data._id);
                     /*let response = */await axios.post("/api/photos", formData, {
@@ -415,6 +415,5 @@ var app = new Vue({
 })
 
 window.onscroll = function() {
-    console.log(window.pageYOffset);
     document.getElementById("leftMenu").style.paddingTop = (window.pageYOffset > 100)? 0 : (100 - window.pageYOffset) + "px";
 }

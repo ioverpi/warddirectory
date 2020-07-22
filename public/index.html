@@ -90,7 +90,7 @@
                         <button v-if="currApt != 'Bishopric'" @click="togglePhotoEditor(member.photo)" type="button">Edit Photo</button>
                         <span v-else>
                             <label for="updateBishopricPhoto">New Photo: </label>
-                            <input type="file" ref="file2" id="updateBishopricPhoto">
+                            <input type="file" @change="loadFile" id="updateBishopricPhoto">
                         </span>
                         <input v-model="editedFirstname" placeholder="First Name">
                         <input v-model="editedLastname" placeholder="Last Name">
