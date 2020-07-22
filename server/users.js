@@ -115,7 +115,7 @@ async function genTokenSendEmail(user, res) {
 
 Please click on the following link, or paste this into your browser to complete the process within one hour of receiving it:
 
-${process.env.DEBUG_MODE?"http":"https"}://${process.env.SERVER_HOST}${(process.env.SERVER_PORT == 443 || process.env.SERVER_PORT == 80)?"":`:${process.env.SERVER_PORT}`}/api/users/reset/${token}
+${process.env.DEBUG_MODE?"http":"https"}://${process.env.SERVER_HOST}${(process.env.SERVER_PORT_EXTERNAL == 443 || process.env.SERVER_PORT_EXTERNAL == 80)?"":`:${process.env.SERVER_PORT_EXTERNAL}`}/api/users/reset/${token}
 
 If you did not request this, please ignore this email and your password will remain unchanged.
 `
