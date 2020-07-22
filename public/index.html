@@ -138,7 +138,7 @@
                             <tr v-for="(member, name) in value">
                                 <td>{{name}}:</td>
                                 <td><span v-if="member">{{member.firstname}} {{member.lastname}}</span>
-                                    <button v-if="callingField != (category+name)" type="button" @click="callingField = (category+name)">Edit</button>
+                                    <button v-if="callingField != (category+name) && user.permissions > 0" type="button" @click="callingField = (category+name)">Edit</button>
                                     <select v-if="callingField == (category+name)" v-model="editId">
                                         <option>Choose a member</option>
                                         <option v-for="m in members" :value="m._id">{{m.firstname}} {{m.lastname}}</option>
