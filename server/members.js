@@ -106,6 +106,19 @@ router.post("/permissions", auth.verifyToken, async (req, res) => {
     }
 });
 
+router.post("/hidden", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async(req, res) => {
+    try{
+        //const currentUser = await Member.findById(req.user_id);
+        const member = await Member.findById(req.body.id);
+        member.hidden = req.body.hidden;
+        await member.save();
+        return res.sendStatus(200);
+    } catch(error){
+        console.log(error);
+        return res.sendStatus(500);
+    }
+})
+
 router.delete("/:id", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async (req, res) => {
     try{
         await Member.deleteOne({

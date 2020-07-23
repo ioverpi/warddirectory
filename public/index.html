@@ -79,6 +79,12 @@
 
             <div class="content">
                 <div v-for="member in memberSubset" @mouseover="currMember = member._id" @mouseleave="currMember = ''" class="member-info">
+                    <div v-if="member.hidden && member._id != editId" class="hidden-member">
+                        <p v-if="currMember == member._id">This member is temporarily hidden. 
+                            Either they will be coming back eventually or they have moved out for good. 
+                            If you know they aren't coming back (e.g. they got married), please let me know!
+                        </p>
+                    </div>
                     <img :src="'/photos/' + photoPath(member) + '.jpg?t=' + member.photo" :alt="photoAlt(member.firstname, member.lastname)" :class="(currApt == 'Bishopric')? 'control' : false">
                     <div v-if="member._id != editId">
                         <p>{{member.firstname}} {{member.lastname}}</p>
@@ -101,6 +107,10 @@
                         <select v-if="hasPermissions(member)" @change="changePermissions(member)" v-model="permissionLevel" id="permissions">
                             <option v-for="n in user.permissions" :value="n - 1">{{n - 1}}</option>
                         </select>
+                        <div>
+                            <label for="hiddenField">Member hidden</label>
+                            <input v-model="hiddenMember" type="checkbox" id="hiddenField" @change="changeHiddenState(member)">
+                        </div>
                     </div>
                     <div v-if="currMember == member._id && user.permissions > 0" class="edit-options">
                         <button v-if="member._id != editId" @click="editMember(member)" type="button">Edit</button>

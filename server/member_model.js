@@ -20,7 +20,8 @@ const userSchema = new mongoose.Schema({ //We are letting the member schema take
     resetPasswordToken: String,
     resetPasswordExpires: Number,
     ward: String,
-    events: [{category: String, date: Date, message: String, success: Boolean}]
+    events: [{category: String, date: Date, message: String, success: Boolean}],
+    hidden: Boolean
 });
 
 userSchema.pre("save", async function(next){

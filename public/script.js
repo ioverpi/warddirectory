@@ -34,7 +34,8 @@ var app = new Vue({
         callings: {},
         callingField: "",
         plainPhoto: null,
-        additionalLoginMessage: "First time logging in?"
+        additionalLoginMessage: "First time logging in?",
+        hiddenMember: false
     },
     async created(){
         this.getUser();
@@ -180,6 +181,7 @@ var app = new Vue({
                 this.editedApt = member.apt;
                 this.permissionLevel = member.permissions;
                 this.address = member.address?member.address:"";
+                this.hiddenMember = member.hidden?member.hidden:false;
             }else{
                 this.toggleForm();
             }
@@ -243,6 +245,18 @@ var app = new Vue({
         },
         hasPermissions(member){
             return (this.user && this.user.permissions > 1 && member.permissions < this.user.permissions);
+        },
+        async changeHiddenState(member){
+            try{
+                await axios.post("/api/members/hidden", {
+                    id: member._id,
+                    hidden: this.hiddenMember
+                });
+                this.editId = "";
+                this.getMembers();
+            } catch(error){
+                console.log(error);
+            }
         },
         toggleForm(){
             this.error = "";
