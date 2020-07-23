@@ -18,6 +18,7 @@ async function login(user, res){
 
     user.removeOldTokens();
     user.addToken(token);
+    user.logEvent("Login", Date.now(), "Logged in successfully!", true);
     await user.save();
 
     return res
@@ -123,6 +124,7 @@ If you did not request this, please ignore this email and your password will rem
 
         await transporter.sendMail(mailOptions);
     } catch(error) {
+        console.log(`Failed to send email to ${user.email}.`);
         console.log(error);
         return res.sendStatus(500);
     }
@@ -146,6 +148,11 @@ router.post("/login", async (req, res) => {
 
         if(!existingUser.password) {
             await genTokenSendEmail(existingUser, res);
+            existingUser.logEvent("Reset Password", 
+                Date.now(), 
+                `Sent password reset email. Reason for the password reset: ${user.password?"Forgotten Password":"New user"}.`, 
+                true);
+            existingUser.save();
             return res.status(200).send({
                 message: "This is your first time logging in. We have sent an email to you to set your password."
             });
@@ -153,10 +160,16 @@ router.post("/login", async (req, res) => {
 
         if(!req.body.password) return res.sendStatus(400);
 
-        if(!await existingUser.comparePassword(req.body.password))
+        if(!await existingUser.comparePassword(req.body.password)){
+            existingUser.logEvent("Login", 
+                Date.now(), 
+                "Tried to log in with a bad password.",
+                false);
+            existingUser.save();
             return res.status(403).send({
                 message: obscureAuthMessage
             });
+        }
 
         login(existingUser, res);
     } catch(error){
@@ -175,6 +188,7 @@ router.delete("/", auth.verifyToken, async (req, res) => {
         });
 
     user.removeToken(req.token);
+    user.logEvent("Logout", Date.now(), "Logged out successfully", true);
     await user.save();
     res.clearCookie("token");
     res.sendStatus(200);
@@ -230,6 +244,10 @@ router.post("/reset/:token", async (req, res) => {
         user.password = req.body.password;
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
+        user.logEvent("Reset Password",
+            Date.now(),
+            "Successfully reset password!",
+            true);
         await user.save();
         return res.status(200).send("Password reset successful! You may close this page.")
     } catch(error){

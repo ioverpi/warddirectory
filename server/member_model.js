@@ -19,7 +19,8 @@ const userSchema = new mongoose.Schema({ //We are letting the member schema take
     permissions: Number, 
     resetPasswordToken: String,
     resetPasswordExpires: Number,
-    ward: String
+    ward: String,
+    events: [{category: String, date: Date, message: String, success: Boolean}]
 });
 
 userSchema.pre("save", async function(next){
@@ -67,6 +68,15 @@ userSchema.methods.removeToken = function(token){
 
 userSchema.methods.removeOldTokens = function(){
     this.tokens = auth.removeOldTokens(this.tokens);
+}
+
+userSchema.methods.logEvent = function(category, date, message, success) {
+    this.events.push({
+        category: category,
+        date: date,
+        message: message,
+        success: success
+    })
 }
 
 const makeModel = () => {
