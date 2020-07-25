@@ -174,6 +174,21 @@
                 If you do not have an account, I will soon provide an example login to see the features of this application. 
                 I hope you find this useful!
             </p>
+
+            <!--div class="sidebar"-->
+                <div id="rightMenu" class="sidebarinner" style="right:0">
+                    <div v-if="user" class="sidebarinnerinner booklet">
+                        <a href="/api/booklet">Download Current Booklet</a>
+                        <br>
+                        <div v-if="user.permissions > 2">
+                            <p style="text-align: center;">Clerk tools</p>
+                            <button type="button" @click="generateBooklet">Generate Booklet</button>
+                            <a v-for="name in oldBooklets" :href="'/api/booklet/' + name">{{name.split("_").slice(0, 2).join(" ")}}</a>
+                        </div>
+                    </div>
+                </div>
+            <!--/div-->
+
             <!-- Not ready for this yet. 
             <a style="float:right" href="/api/booklet">Generate Booklet</a>
             -->

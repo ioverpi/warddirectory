@@ -35,14 +35,18 @@ var app = new Vue({
         callingField: "",
         plainPhoto: null,
         additionalLoginMessage: "First time logging in?",
-        hiddenMember: false
+        hiddenMember: false,
+        oldBooklets: []
     },
     async created(){
-        this.getUser();
-        this.getApartmentList();
-        this.getWardName();
-        await this.getMembers();
+        await this.getUser();
+        if(this.user){
+            if(this.user.permissions > 2) this.getOldBooklets();
+            this.getApartmentList();
+            this.getWardName();
+            this.getMembers();
         //this.getCallings();
+        }
     },
     methods: {
         getApartment(aptnumber){
@@ -322,6 +326,7 @@ var app = new Vue({
                     return;
                 }
                 this.user = response.data;
+                if(this.user.permissions > 2) this.getOldBooklets();
                 this.getApartmentList();
                 this.getWardName();
                 this.getMembers();
@@ -401,13 +406,6 @@ var app = new Vue({
         photoAlt(first, last){
             return first + " " + last;
         },
-        async generateBooklet(){
-            try{
-                let response = axios.get("/api/booklet");
-            } catch(error){
-                //I need to think for what to put here as well. 
-            }
-        },
         async updateCalling(memberId, newCalling){
             try{
                 let response = await axios.post("/api/members/calling", {
@@ -424,10 +422,30 @@ var app = new Vue({
             } catch(error){
                 console.log(error);
             }
+        },
+        async generateBooklet(){
+            try{
+                let response = await axios.get("/api/booklet/generate");
+                if(response.status == 200) {
+                    alert("Successfully generated the booklet!") //Make something fancier here. :)
+                } 
+            } catch(error){
+                alert("Failed to generated booklet!");
+                console.log(error);
+            }
+        },
+        async getOldBooklets(){
+            try{
+                let response = await axios.get("/api/booklet/old");
+                this.oldBooklets = response.data.booklets;
+            } catch(error){
+                console.log(error);
+            }
         }
     }
 })
 
 window.onscroll = function() {
     document.getElementById("leftMenu").style.paddingTop = (window.pageYOffset > 100)? 0 : (100 - window.pageYOffset) + "px";
+    document.getElementById("rightMenu").style.paddingTop = (window.pageYOffset > 100)? 0 : (100 - window.pageYOffset) + "px";
 }

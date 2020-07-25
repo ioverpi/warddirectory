@@ -12,8 +12,8 @@ server/booklets/*
 !photos/.gitkeep
 !server/booklets/.gitkeep
 
-#Test files that don't need be public.
-temp.*
+#Temporary files that don't need be public.
+temp*.*
 
 #Credentials
 *.env

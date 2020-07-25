@@ -13,6 +13,9 @@ const variables = {};
 const tempBookletTek = path.resolve("./temp.tek");
 const tempBookletPdf = path.resolve("./temp.pdf");
 
+const temp1BookletTek = path.resolve("./temp1.tek");
+const temp1BookletPdf = path.resolve("./temp1.pdf");
+
 // Booklet
 
 const Member = mongoose.model("Member");
@@ -21,6 +24,21 @@ const Ward = mongoose.model("Ward");
 router.get("/", auth.verifyToken, async (req, res) => {
     try{
         await loadVariables(req.user_id);
+        try{
+            await fs.access(genBookletPdfName());
+        } catch(error){
+            if(error.code == "ENOENT"){
+                try{
+                    await genBooklet(req.user_id);
+                } catch(error){
+                    console.log(error);
+                    return res.sendStatus(500);
+                }
+            }else{
+                console.log(error);
+                return res.sendStatus(500);
+            }
+        }
         res.download(genBookletPdfName());
     } catch(error){
         console.log(error);
@@ -30,37 +48,34 @@ router.get("/", auth.verifyToken, async (req, res) => {
 
 router.get("/generate", [auth.verifyToken, auth2.permissionsGreaterThan(2)], async (req, res) => {
     try{
-        await loadVariables(req.user_id);
-        let members = [];
-        for(let i = 0; i < variables.apartments.length; i++){
-            members[i] = await Member.find({
-                apt: variables.apartments[i],
-                hidden: {$ne: true}
-            });
-        }
-        var pb = "\\pagebreak\n";
-        var finalBooklet = createFirstPart();
-        finalBooklet += createFrontCover();
-        finalBooklet += pb;
-        finalBooklet += await createBishopricPage();
-        finalBooklet += pb;
-        finalBooklet += await createLeadershipPage();
-        finalBooklet += pb;
-        finalBooklet += createApartmentPage(variables.apartments[1], members[1]);
-        for(let i = 2; i < variables.apartments.length; i++){
-            finalBooklet += pb;
-            finalBooklet += createApartmentPage(variables.apartments[i], members[i]);
-        }
-        finalBooklet += pb;
-        finalBooklet += createEmergencyInfoPage();
-        finalBooklet += pb;
-        finalBooklet += createBackCover();
-        finalBooklet += createLastPart();
-        //console.log(finalBooklet);
-        await createPDF(finalBooklet);
-        await renamePDF();
+        await genBooklet(req.user_id);
         return res.sendStatus(200);
-        //return res.download("./test.pdf");
+    } catch(error){
+        console.log(error);
+        return res.sendStatus(500);
+    }
+});
+
+router.get("/old", [auth.verifyToken, auth2.permissionsGreaterThan(2)], async (req, res) => {
+    try{
+        const files = (await fs.readdir("./booklets")).filter(f => f.match(".pdf"));
+        return res.status(200).send({
+            booklets: files
+        });
+    } catch(error){
+        console.log(error);
+        return res.sendStatus(500);
+    }
+});
+
+router.get("/:file", [auth.verifyToken, auth2.permissionsGreaterThan(2)], async (req, res) => {
+    try{
+        try{
+            await fs.access(path.resolve(`./booklets/${req.params.file}`));
+        } catch(error){
+            return res.sendStatus(400);
+        }
+        return res.download(path.resolve(`./booklets/${req.params.file}`));
     } catch(error){
         console.log(error);
         return res.sendStatus(500);
@@ -99,6 +114,39 @@ function parseString(str, variables){ //This might come in handy.
 	return str;
 }
 
+async function genBooklet(userId){
+    await loadVariables(userId);
+    let members = [];
+    for(let i = 0; i < variables.apartments.length; i++){
+        members[i] = await Member.find({
+            apt: variables.apartments[i],
+            hidden: {$ne: true}
+        });
+    }
+    var pb = "\\pagebreak\n";
+    var finalBooklet = createFirstPart();
+    finalBooklet += createFrontCover();
+    finalBooklet += pb;
+    finalBooklet += await createBishopricPage();
+    finalBooklet += pb;
+    finalBooklet += await createLeadershipPage();
+    finalBooklet += pb;
+    finalBooklet += createApartmentPage(variables.apartments[1], members[1]);
+    for(let i = 2; i < variables.apartments.length; i++){
+        finalBooklet += pb;
+        finalBooklet += createApartmentPage(variables.apartments[i], members[i]);
+    }
+    finalBooklet += pb;
+    finalBooklet += createEmergencyInfoPage();
+    finalBooklet += pb;
+    finalBooklet += createBackCover();
+    finalBooklet += createLastPart();
+    //console.log(finalBooklet);
+    await createPDF(finalBooklet);
+    await createPDFLandscape(landscapeString(genPages(32), "temp.pdf")); //TODO: figure out how many pages are in a pdf. 
+    await renamePDF();
+}
+
 function genBookletPdfName(currSemester){
     let year = (new Date()).getFullYear();
     let today = Date.now();
@@ -119,7 +167,7 @@ function genBookletPdfName(currSemester){
 
 async function renamePDF(currSemester){
     const newBookletPath = path.resolve(genBookletPdfName(currSemester));
-    await fs.rename(tempBookletPdf, newBookletPath);
+    await fs.rename(temp1BookletPdf, newBookletPath);
 }
 
 async function createPDF(bookletString){
@@ -133,8 +181,28 @@ async function createPDF(bookletString){
     }
 }
 
+async function createPDFLandscape(str){
+    try{
+        await fs.writeFile(temp1BookletTek, str);
+        const {stdout, stderr} = await exec(`pdflatex -interaction=nonstopmode ${temp1BookletTek}`);
+        console.log("stdout: ", stdout);
+        console.log("stderror: ", stderr);
+    } catch(error){
+        //I don't know what to put here at the moment...
+    }
+}
+
 //Variables
 let photoDir = "../photos/";
+
+function landscapeString(pageOrder, bookletName){
+    return `\\documentclass{article}
+\\usepackage{pdfpages}
+\\begin{document}
+\\pagestyle{plain}
+\\includepdf[pages=${pageOrder}, nup=1x2, landscape]{${bookletName}}
+\\end{document}`;
+}
 
 function createApartmentPageAlt(name, members){
     let page;
