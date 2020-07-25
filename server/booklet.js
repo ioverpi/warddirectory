@@ -5,18 +5,37 @@ const router = express.Router();
 const fs = require("fs").promises;
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
+const auth2 = require("./auth2.js");
+const path = require("path");
 //const variables = require("./variables.js"); //TODO: Need to fix this.
+const variables = {};
+
+const tempBookletTek = path.resolve("./temp.tek");
+const tempBookletPdf = path.resolve("./temp.pdf");
 
 // Booklet
 
 const Member = mongoose.model("Member");
+const Ward = mongoose.model("Ward");
 
 router.get("/", auth.verifyToken, async (req, res) => {
     try{
+        await loadVariables(req.user_id);
+        res.download(genBookletPdfName());
+    } catch(error){
+        console.log(error);
+        return res.sendStatus(500);
+    }
+});
+
+router.get("/generate", [auth.verifyToken, auth2.permissionsGreaterThan(2)], async (req, res) => {
+    try{
+        await loadVariables(req.user_id);
         let members = [];
         for(let i = 0; i < variables.apartments.length; i++){
             members[i] = await Member.find({
-                apt: variables.apartments[i]
+                apt: variables.apartments[i],
+                hidden: {$ne: true}
             });
         }
         var pb = "\\pagebreak\n";
@@ -39,12 +58,22 @@ router.get("/", auth.verifyToken, async (req, res) => {
         finalBooklet += createLastPart();
         //console.log(finalBooklet);
         await createPDF(finalBooklet);
-        return res.download("./test.pdf");
+        await renamePDF();
+        return res.sendStatus(200);
+        //return res.download("./test.pdf");
     } catch(error){
         console.log(error);
         return res.sendStatus(500);
     }
 });
+
+async function loadVariables(currUserId) {
+    const currentUser = await Member.findById(currUserId);
+    const userWard = await Ward.findById(currentUser.ward);
+    variables.apartments = userWard.apartments;
+    variables.callings = JSON.parse(userWard.callings);
+    variables.name = userWard.name;//.replace(/ /g, "_");
+}
 
 function genPages(num){
     var arr=[];
@@ -70,11 +99,33 @@ function parseString(str, variables){ //This might come in handy.
 	return str;
 }
 
+function genBookletPdfName(currSemester){
+    let year = (new Date()).getFullYear();
+    let today = Date.now();
+    let semester;
+    if(currSemester){
+        semester = currSemester;
+    } else if(today > new Date("August 29, " + year)){
+        semester = "Fall";
+    } else if(today > new Date("June 19, " + year)){
+        semester = "Summer";
+    } else if(today > new Date("April 24, " + year)){
+        semester = "Spring";
+    } else {
+        semester = "Winter";
+    }
+    return `./booklets/${semester}_${year}_${variables.name.replace(/ /g, "_")}_Ward.pdf`;
+}
+
+async function renamePDF(currSemester){
+    const newBookletPath = path.resolve(genBookletPdfName(currSemester));
+    await fs.rename(tempBookletPdf, newBookletPath);
+}
+
 async function createPDF(bookletString){
-    var filename = "test.tek";
     try{
-        await fs.writeFile(filename, bookletString);
-        const {stdout, stderr} = await exec("pdflatex -interaction=nonstopmode " + filename);
+        await fs.writeFile(tempBookletTek, bookletString);
+        const {stdout, stderr} = await exec(`pdflatex -interaction=nonstopmode ${tempBookletTek}`);
         console.log("stdout: ", stdout);
         console.log("stderror: ", stderr);
     } catch(error){

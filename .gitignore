@@ -13,8 +13,7 @@ server/booklets/*
 !server/booklets/.gitkeep
 
 #Test files that don't need be public.
-test.*
-test1.*
+temp.*
 
 #Credentials
 *.env
