@@ -10,10 +10,10 @@ const path = require("path");
 //const variables = require("./variables.js"); //TODO: Need to fix this.
 const variables = {};
 
-const tempBookletTek = path.resolve("./temp.tek");
+const tempBookletTek = path.resolve("./temp.tex");
 const tempBookletPdf = path.resolve("./temp.pdf");
 
-const temp1BookletTek = path.resolve("./temp1.tek");
+const temp1BookletTek = path.resolve("./temp1.tex");
 const temp1BookletPdf = path.resolve("./temp1.pdf");
 
 // Booklet

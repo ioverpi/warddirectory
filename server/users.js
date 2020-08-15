@@ -200,6 +200,9 @@ router.delete("/", auth.verifyToken, async (req, res) => {
 })
 
 router.post("/forgot_password", async (req, res) => {
+    if(!req.body.email) 
+        return res.sendStatus(400);
+
     try{
         const user = await User.findOne({
             email: req.body.email
