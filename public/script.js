@@ -170,7 +170,7 @@ var app = new Vue({
                 console.log(error);
             }
         },
-        addBatch(){
+        async addBatch(){
             try{
                 let repsonse = axios.post("/api/members/batch", {
                     data: JSON.parse(this.batchData)
@@ -296,6 +296,7 @@ javascript: (function () {
         async togglePhotoEditor(hasPhoto){
             //Something...
             this.showPhotoEditor = !this.showPhotoEditor;
+            /* Edit this in the future if needed. 
             if(hasPhoto > 0){
                 setTimeout(function(){//Edit this in the future!
                     init();
@@ -306,6 +307,7 @@ javascript: (function () {
                 //let respose = await axios.get("/photos/" + this.editId + "_original.jpg");
                 //console.log(response);
             }
+            */
             if(!this.showPhotoEditor){
                 this.getMembers();
             }
@@ -396,15 +398,17 @@ javascript: (function () {
         async saveImage(){
             try{
                 //console.log("check 0");
+                /* I don't think we actually need this code at this instance of time. Maybe we do. 
                 let formData = new FormData();
                 if(this.$refs.file.files.length > 0){
                     formData.append("photo", this.$refs.file.files[0], this.editId + "_original.jpg");
                     formData.append("photoType", "original");
                     formData.append("id", this.editId);
-                    /*let response = */await axios.post("/api/photos", formData, {
+                    await axios.post("/api/photos", formData, {
                         headers: {"Content-Type": "multipart/form-data"}
                     });
                 }
+                */
                 //console.log("check 1");
                 let imageBlob = await saveImageBlob();
                 formData = new FormData();
