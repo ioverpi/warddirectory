@@ -25,6 +25,7 @@ app.use(cookieParser());
 
 require("./member_model.js").makeModel();
 require("./ward_model.js").makeModel();
+require("./old_email_model.js").makeModel();
 const auth = require("./auth.js");
 
 const members = require('./members.js');

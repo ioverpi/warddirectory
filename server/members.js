@@ -7,6 +7,8 @@ const auth2 = require("./auth2.js");
 // Members
 
 const Member = mongoose.model("Member"); //, memberSchema);
+const OldEmail = mongoose.model("OldEmail")
+//const Ward = mongoose.model("Ward");
 
 router.get("/", auth.verifyToken, async (req, res) => {
     try{
@@ -119,11 +121,67 @@ router.post("/hidden", [auth.verifyToken, auth2.permissionsGreaterThan(0)], asyn
     }
 })
 
+router.post("/batch", [auth.verifyToken, auth2.permissionsGreaterThan(2)], async (req, res) => {
+    try{
+        for(const member of req.body.data) {
+            const oldMember = await Member.findOne({
+                email: member.email
+            }) || await OldEmail.findOne({
+                email: member.email
+            });
+            /* || await Ward.findOne({
+                old_emails: member.email
+            });*/
+            
+
+            //let x = 1 || 4
+            if(!oldMember) {
+                let newMember = new Member({
+                    firstname: member.firstname,
+                    lastname: member.lastname,
+                    email: member.email,
+                    phone: member.phone,
+                    apt: member.apartment,
+                    photo: 0,
+                    permissions: 0,
+                    ward: req.user_ward,
+                    password: "" //Maybe change the users.js instead of changing this. 
+                });
+
+                await newMember.save()
+            }            
+        }
+
+        return res.sendStatus(200)
+    } catch(error){
+        console.log(error);
+        return res.sendStatus(500);
+    }
+});
+
 router.delete("/:id", [auth.verifyToken, auth2.permissionsGreaterThan(0)], async (req, res) => {
     try{
-        await Member.deleteOne({
-            _id: req.params.id
+        const member = await Member.findById(req.params.id)
+        /*
+        const ward = await Ward.findById(member.ward)
+        console.log(ward);
+        console.log(ward.old_emails);
+        ward.old_emails.push(member.email);
+        ward.save()*/
+        
+        const oldEmail = new OldEmail({
+            email: member.email
         });
+
+        oldEmail.save();
+        
+
+        member.remove(); //This is depreciated, but oh-well ¯\_(ツ)_/¯
+
+        /* await Member.deleteOne({
+            _id: req.params.id
+        }); */
+
         return res.sendStatus(200);
     } catch(error){
         console.log(error);

@@ -66,6 +66,27 @@
                 </div>
             </transition>
 
+            <transition v-if="showBatchForm" name="modal">
+                <div class="modal-mask">
+                  <div class="modal-wrapper">
+                    <div class="modal-container">
+                      <div class="modal-header">
+                        <h1 class="modal-title">Add Batch</h1>
+                      </div>
+                      <div class="modal-body">
+                        <textarea v-model="batchData">
+
+                        </textarea>
+                      </div>
+                      <div class="modal-footer">
+                        <button @click="addBatch" type="button">Submit</button>
+                        <button @click="toggleBatchForm" type="button">Cancel</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </transition>
+
             <div class="sidebar">
                 <div class="sidebarinner" id="leftMenu">
                     <div v-if="user" class="sidebarinnerinner">
@@ -184,6 +205,7 @@
                             <p style="text-align: center;">Clerk tools</p>
                             <button type="button" @click="generateBooklet">Generate Booklet</button>
                             <a v-for="name in oldBooklets" :href="'/api/booklet/' + name">{{name.split("_").slice(0, 2).join(" ")}}</a>
+                            <button style="margin-top: 40px" type="button" @click="toggleBatchForm">Add Batch</button>
                         </div>
                     </div>
                 </div>

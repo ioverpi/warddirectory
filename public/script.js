@@ -36,7 +36,9 @@ var app = new Vue({
         plainPhoto: null,
         additionalLoginMessage: "First time logging in?",
         hiddenMember: false,
-        oldBooklets: []
+        oldBooklets: [],
+        batchData: "",
+        showBatchForm: false
     },
     async created(){
         await this.getUser();
@@ -167,6 +169,27 @@ var app = new Vue({
             } catch(error){
                 console.log(error);
             }
+        },
+        addBatch(){
+            try{
+                let repsonse = axios.post("/api/members/batch", {
+                    data: JSON.parse(this.batchData)
+                });
+                this.toggleBatchForm();
+                this.getMembers()
+            } catch(error){
+                console.log(error);
+            }
+        },
+        toggleBatchForm(){
+            this.batchData = `
+javascript: (function () { 
+    var jsCode = document.createElement('script'); 
+    jsCode.setAttribute('src', 'https://warddirectory.org/exportdata.js');                  
+    document.body.appendChild(jsCode); 
+    }());
+`;
+            this.showBatchForm = !this.showBatchForm
         },
         showAddField(apartment){
             this.addId = apartment;
