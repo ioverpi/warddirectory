@@ -481,28 +481,28 @@ async function createBishopricPage(){
     });
     let bishopWife = await Member.findOne({
         lastname: bishop.lastname,
-        firstname: {$not: bishop.firstname}
+        firstname: {$ne: bishop.firstname}
     })
     let firstCounselor = await Member.findOne({
         calling: "Bishopric;1st Counselor"
     });
     let firstCounselorWife = await Member.findOne({
         lastname: firstCounselor.lastname,
-        firstname: {$not: firstCounselor.firstname}
+        firstname: {$ne: firstCounselor.firstname}
     })
     let secondCounselor = await Member.findOne({
         calling: "Bishopric;2nd Counselor"
     });
     let secondCounselorWife = await Member.findOne({
         lastname: secondCounselor.lastname,
-        firstname: {$not: secondCounselor.firstname}
+        firstname: {$ne: secondCounselor.firstname}
     })
     let highCounselor = await Member.findOne({
         calling: "Bishopric;Assigned Stake High Counselor"
     });
     let highCounselorWife = await Member.findOne({
         lastname: highCounselor.lastname,
-        firstname: {$not: highCounselor.firstname}
+        firstname: {$ne: highCounselor.firstname}
     })
     if(!bishop && !firstCounselor && !secondCounselor && !highCounselor 
         && !bishopWife && !firstCounselorWife && !secondCounselorWife && !highCounselorWife){
@@ -625,7 +625,7 @@ async function createLeadershipPage(){
     })
     let wardClerkWife = await Member.findOne({
         lastname: wardClerk.lastname,
-        firstname: {$not: wardClerk.firstname}
+        firstname: {$ne: wardClerk.firstname}
     })
 
     if(wardClerk){
