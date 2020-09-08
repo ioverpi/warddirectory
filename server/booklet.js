@@ -523,9 +523,9 @@ async function createBishopricPage(){
     result += "Bishop & ";
     //result += hspace + " & ";
     result += "1st Counselor \\\\\n";
-    result += bishop.firstname +" & " + bishopWife.firstname + " " + bishop.lastname + " & ";
+    result += bishop.firstname +" \\& " + bishopWife.firstname + " " + bishop.lastname + " & ";
     //result += hspace + " & ";
-    result += firstCounselor.firstname + " & " + firstCounselorWife.firstname + " " + firstCounselor.lastname + " \\\\\n";
+    result += firstCounselor.firstname + " \\& " + firstCounselorWife.firstname + " " + firstCounselor.lastname + " \\\\\n";
     result += bishop.phone + " & ";
     //result += hspace + " & ";
     result += firstCounselor.phone + " \\\\\n";
@@ -545,9 +545,9 @@ async function createBishopricPage(){
     result += "2nd Counselor & ";
     //result += hspace + " & ";
     result += "Assigned Stake High Counselor \\\\\n";
-    result += secondCounselor.firstname + " & " + secondCounselorWife.firstname + " " + secondCounselor.lastname + " & ";
+    result += secondCounselor.firstname + " \\& " + secondCounselorWife.firstname + " " + secondCounselor.lastname + " & ";
     //result += hspace + " & ";
-    result += highCounselor.firstname + " & " + highCounselorWife.firstname + " " + highCounselor.lastname + " \\\\\n";
+    result += highCounselor.firstname + " \\& " + highCounselorWife.firstname + " " + highCounselor.lastname + " \\\\\n";
     result += secondCounselor.phone + " & ";
     //result += hspace + " & ";
     result += highCounselor.phone + " \\\\\n";
@@ -623,6 +623,10 @@ async function createLeadershipPage(){
     let wardClerk = await Member.findOne({
         calling: "Ward Clerks;Ward Clerk"
     })
+    let wardClerkWife = await Member.findOne({
+        lastname: wardClerk.lastname,
+        firstname: {$not: wardClerk.firstname}
+    })
 
     if(wardClerk){
         result += "\\setlength{\\tabcolsep}{5pt}\n";
@@ -632,7 +636,7 @@ async function createLeadershipPage(){
 
         result += "& \\vspace{2cm} \\\\\n";
         //result += "\\begin{Large}\n"
-        result += "& \\Large " + wardClerk.firstname.replace("&", "\\&") + " " + wardClerk.lastname + " \\\\\n";
+        result += "& \\Large " + wardClerk.firstname + " \\& " + wardClerkWife.firstname + " " + wardClerk.lastname + " \\\\\n";
         //result += "& David \\& Sonia Smaldone \\\\\n";
         result += "& \\Large " + wardClerk.phone + " \\\\\n";
         //result += "& 801-209-7024 \\\\\n";
