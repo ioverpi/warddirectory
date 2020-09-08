@@ -147,21 +147,22 @@ async function genBooklet(userId){
     await renamePDF();
 }
 
-function genBookletPdfName(currSemester){
-    let year = (new Date()).getFullYear();
+function getYear(){
+    return (new Date()).getFullYear();
+}
+
+function getSemester(){
     let today = Date.now();
-    let semester;
-    if(currSemester){
-        semester = currSemester;
-    } else if(today > new Date("August 29, " + year)){
-        semester = "Fall";
-    } else if(today > new Date("June 19, " + year)){
-        semester = "Summer";
-    } else if(today > new Date("April 24, " + year)){
-        semester = "Spring";
-    } else {
-        semester = "Winter";
-    }
+    let year = getYear();
+    if(today > new Date("August 29, " + year)) return "Fall";
+    if(today > new Date("June 19, " + year)) return "Summer";
+    if(today > new Date("April 24, " + year)) return "Spring";
+    return "Winter";
+}
+
+function genBookletPdfName(currSemester){
+    let year = getYear();
+    let semester = currSemester || getSemester();
     return `./booklets/${semester}_${year}_${variables.name.replace(/ /g, "_")}_Ward.pdf`;
 }
 
@@ -713,7 +714,7 @@ function createFrontCover(){
 	result += "\n";
 	result += "\\vspace{2mm}\n";
 	result += "\n";
-	result += "\\textbf{\\Large Winter Semester 2020}\n";
+    result += "\\textbf{\\Large " + getSemester() + " Semester " + getYear() + "}\n";
 	result += "\n";
 	result += "\\vspace{1cm}\n";
 	result += "\n";
