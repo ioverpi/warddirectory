@@ -479,16 +479,33 @@ async function createBishopricPage(){
     let bishop = await Member.findOne({
         calling: "Bishopric;Bishop"
     });
+    let bishopWife = await Member.findOne({
+        lastname: bishop.lastname,
+        firstname: {$not: bishop.firstname}
+    })
     let firstCounselor = await Member.findOne({
         calling: "Bishopric;1st Counselor"
     });
+    let firstCounselorWife = await Member.findOne({
+        lastname: firstCounselor.lastname,
+        firstname: {$not: firstCounselor.firstname}
+    })
     let secondCounselor = await Member.findOne({
         calling: "Bishopric;2nd Counselor"
     });
+    let secondCounselorWife = await Member.findOne({
+        lastname: secondCounselor.lastname,
+        firstname: {$not: secondCounselor.firstname}
+    })
     let highCounselor = await Member.findOne({
         calling: "Bishopric;Assigned Stake High Counselor"
     });
-    if(!bishop && !firstCounselor && !secondCounselor && !highCounselor){
+    let highCounselorWife = await Member.findOne({
+        lastname: highCounselor.lastname,
+        firstname: {$not: highCounselor.firstname}
+    })
+    if(!bishop && !firstCounselor && !secondCounselor && !highCounselor 
+        && !bishopWife && !firstCounselorWife && !secondCounselorWife && !highCounselorWife){
         result += "You need to have all 4 members of the bishopbric. \n"
         result += "\\end{center}\n";
         return result;
@@ -506,9 +523,9 @@ async function createBishopricPage(){
     result += "Bishop & ";
     //result += hspace + " & ";
     result += "1st Counselor \\\\\n";
-    result += bishop.firstname.replace("&", "\\&") + " " + bishop.lastname + " & ";
+    result += bishop.firstname +" & " + bishopWife.firstname + " " + bishop.lastname + " & ";
     //result += hspace + " & ";
-    result += firstCounselor.firstname.replace("&", "\\&") + " " + firstCounselor.lastname + " \\\\\n";
+    result += firstCounselor.firstname + " & " + firstCounselorWife.firstname + " " + firstCounselor.lastname + " \\\\\n";
     result += bishop.phone + " & ";
     //result += hspace + " & ";
     result += firstCounselor.phone + " \\\\\n";
@@ -528,9 +545,9 @@ async function createBishopricPage(){
     result += "2nd Counselor & ";
     //result += hspace + " & ";
     result += "Assigned Stake High Counselor \\\\\n";
-    result += secondCounselor.firstname.replace("&", "\\&") + " " + secondCounselor.lastname + " & ";
+    result += secondCounselor.firstname + " & " + secondCounselorWife.firstname + " " + secondCounselor.lastname + " & ";
     //result += hspace + " & ";
-    result += highCounselor.firstname.replace("&", "\\&") + " " + highCounselor.lastname + " \\\\\n";
+    result += highCounselor.firstname + " & " + highCounselorWife.firstname + " " + highCounselor.lastname + " \\\\\n";
     result += secondCounselor.phone + " & ";
     //result += hspace + " & ";
     result += highCounselor.phone + " \\\\\n";
