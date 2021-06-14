@@ -155,7 +155,8 @@ function getSemester(){
     let today = Date.now();
     let year = getYear();
     if(today > new Date("August 29, " + year)) return "Fall";
-    if(today > new Date("June 19, " + year)) return "Summer";
+    if(today > new Date("June 12, " + year)) return "Summer"; // This part is hardcoded! Please delete this line when done.
+    // if(today > new Date("June 19, " + year)) return "Summer"; // Uncomment this line when done with the modification above. 
     if(today > new Date("April 24, " + year)) return "Spring";
     return "Winter";
 }
