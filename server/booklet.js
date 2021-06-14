@@ -719,7 +719,7 @@ function createFrontCover(){
 	result += "\n";
 	result += "\\vspace{1cm}\n";
 	result += "\n";
-	result += "\\includegraphics[width=16cm, trim={0 12cm 0 0}, clip]{../photos/emptytomb.jpg}\n";
+	result += "\\includegraphics[width=16cm]{../photos/emptytomb.jpg}\n";
 	result += "\n";
 	result += "\\vspace{2cm}\n";
 	result += "\n";
