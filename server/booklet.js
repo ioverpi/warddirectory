@@ -114,6 +114,13 @@ function parseString(str, variables){ //This might come in handy.
 	return str;
 }
 
+async function readTexPiece(filename, variables){
+    let piece = await fs.readFile(filename, "utf8");
+    return parseString(piece, variables);
+}
+
+//readTexPiece("apt1people.tex", {m0_id:"asdf", photoDir:"../photo/", m0firstname:"Jim", m0lastname:"Apple", m0phone:"(801) 123-4567", m0email:"cool@email.com"})
+
 async function genBooklet(userId){
     await loadVariables(userId);
     let members = [];
@@ -155,8 +162,7 @@ function getSemester(){
     let today = Date.now();
     let year = getYear();
     if(today > new Date("August 29, " + year)) return "Fall";
-    if(today > new Date("June 12, " + year)) return "Summer"; // This part is hardcoded! Please delete this line when done.
-    // if(today > new Date("June 19, " + year)) return "Summer"; // Uncomment this line when done with the modification above. 
+    if(today > new Date("June 19, " + year)) return "Summer";
     if(today > new Date("April 24, " + year)) return "Spring";
     return "Winter";
 }
