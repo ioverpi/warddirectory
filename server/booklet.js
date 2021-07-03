@@ -114,6 +114,34 @@ function parseString(str, variables){ //This might come in handy.
 	return str;
 }
 
+function parseStringUpdated(str, variables){
+    function getValue(obj, parts){
+        if(typeof obj[parts[0]] != "object"){
+            return obj[parts[0]]
+        }
+        return getValue(obj[parts.shift()], parts)
+    }
+    let nextArgument, query, parts1, parts2, sep;
+    while(true){
+        nextArgument = str.match(/{{(([^}][^}]?|[^}]}?)*)}}/);
+        if(!nextArgument) break;
+        query = nextArgument[1];
+        parts1 = query.split(".");
+        parts2 = [];
+        for(part of parts1){
+            sep = part.match(/([^\[]+)\[([^\]])\]/);
+            if(sep){
+                parts2.push(sep[1]);
+                parts2.push(parseInt(sep[2]));
+            }else{
+                parts2.push(part)
+            }
+        }
+        str = str.replace("{{" + query + "}}", getValue(variables, parts2));
+    }
+    return str;
+}
+
 async function readTexPiece(filename, variables){
     let piece = await fs.readFile(filename, "utf8");
     return parseString(piece, variables);
@@ -123,6 +151,12 @@ async function readTexPiece(filename, variables){
 
 async function genBooklet(userId){
     await loadVariables(userId);
+    
+    console.log(await createBishopricPage());
+}
+
+async function genBookletOld(userId){
+    await loadVariables(userId);
     let members = [];
     for(let i = 0; i < variables.apartments.length; i++){
         members[i] = await Member.find({
@@ -130,6 +164,7 @@ async function genBooklet(userId){
             hidden: {$ne: true}
         });
     }
+    
     var pb = "\\pagebreak\n";
     var finalBooklet = createFirstPart();
     finalBooklet += createFrontCover();
@@ -203,377 +238,75 @@ async function createPDFLandscape(str){
 //Variables
 let photoDir = "../photos/";
 
-function landscapeString(pageOrder, bookletName){
-    return `\\documentclass{article}
-\\usepackage{pdfpages}
-\\begin{document}
-\\pagestyle{plain}
-\\includepdf[pages=${pageOrder}, nup=1x2, landscape]{${bookletName}}
-\\end{document}`;
-}
-
-function createApartmentPageAlt(name, members){
-    let page;
-    switch(members.length){
-        case 0:
-            page = 
-`\\vspace{3cm}
-
-Nobody lives here.`;
-        break;
-        case 1:
-            page = 
-`\\vspace{3cm}
-
-\\includegraphics[scale=\\picscale]{${photoDir}${members[0]._id}.jpg} \\\\
-${members[0].firstname} ${members[0].lastname} \\\\
-${members[0].phone} \\\\
-${members[0].email} \\\\`;
-        break;
-        case 2:
-            page = 
-`\\vspace{3cm}
-
-\\begin{tabular}{c c c}
-\\includegraphics[scale=\\picscale]{${photoDir}${members[0]._id}.jpg} & & \\includegraphics[scale=\\picscale]{${photoDir}${members[1]._id}.jpg} \\\\ 
-${members[0].firstname} ${members[0].lastname} & & ${members[1].firstname} ${members[1].lastname} \\\\
-${members[0].phone} & & ${members[1].phone} \\\\
-${members[0].email} & & ${members[1].email} \\\\
-\\end{tabular}`;
-        break;
-        case 3:
-            page = 
-`\\setlength{\\tabcolsep}{5pt}
-\\begin{tabular}{c c c}
-\\includegraphics[scale=\\picscale]{${photoDir}${members[0]._id}.jpg} & & 
-\\includegraphics[scale=\\picscale]{${photoDir}${members[1]._id}.jpg} \\\\
-${members[0].firstname} ${members[0].lastname} & & ${members[1].firstname} ${members[1].lastname} \\\\
-${members[0].phone} & & ${members[1].phone} \\\\
-${members[0].email} & & ${members[1].email} \\\\
-& \\includegraphics[scale=\\picscale]{${photoDir}${members[2]._id}.jpg} \\\\
-& ${members[2].firstname} ${members[2].lastname} \\\\
-& ${members[2].phone} \\\\
-& ${members[2].email} \\\\
-\\end{tabular}
-\\setlength{\\tabcolsep}{17pt}`;
-        break;
-        case 4:
-            hspace = "\\hspace{.5cm}"
-            page = 
-`\\begin{tabular}{c c c}
-${Array(2).join(0).split(0).map((item, i) => `
-\\includegraphics[scale=\\picscale]{${photoDir}${members[i*2]._id}.jpg} & ${hspace} & \\includegraphics[scale=\\picscale]{${photoDir}${members[i*2 + 1]._id}.jpg} \\\\
-${members[i*2].firstname} ${members[i*2].lastname} & ${hspace} & ${members[i*2 + 1].firstname} ${members[i*2 + 1].lastname} \\\\
-${members[i*2].phone} & ${hspace} & ${members[i*2 + 1].phone} \\\\
-${members[i*2].email} & ${hspace} & ${members[i*2 + 1].email} \\\\`).join('').trim()}
-\\end{tabular}`;
-        break;
-        case 5:
-        case 6:
-            let lastRowNum = members.length - 3;
-            page = 
-`\\begin{tabular}{c c c}
-${Array(3).join(0).split(0).map((item, i) => `\\includegraphics[scale=\\picscale]{${photoDir}${members[i]._id}.jpg} `).join('& ')}\\\\
-${Array(3).join(0).split(0).map((item, i) => `${members[i].firstname} ${members[i].lastname} `).join('& ')}\\\\
-${Array(3).join(0).split(0).map((item, i) => `${members[i].phone} `).join('& ')}\\\\
-${Array(3).join(0).split(0).map((item, i) => `${members[i].email} `).join('& ')}\\\\
-\\end{tabular}
-\\begin{tabular}{c c}
-${Array(lastRowNum).join(0).split(0).map((item, i) => `\\includegraphics[scale=\\picscale]{${photoDir}${members[i + 3]._id}.jpg} `).join('& ')}\\\\
-${Array(lastRowNum).join(0).split(0).map((item, i) => `${members[i + 3].firstname} ${members[i + 3].lastname} `).join('& ')}\\\\
-${Array(lastRowNum).join(0).split(0).map((item, i) => `${members[i + 3].phone} `).join('& ')}\\\\
-${Array(lastRowNum).join(0).split(0).map((item, i) => `${members[i + 3].email} `).join('& ')}\\\\
-\\end{tabular}`;
-        break;
-        default:
-            page = 
-`\\vspace{3cm}
-
-Something went wrong in compiling. There is probably too many people in this apartment`;
-        break;
+async function createApartmentPageBlock(){
+    let members = {}
+    for(apt of variables.apartments){
+        // Get data from database
+        let data = await Member.find({
+            apt: apt,
+            hidden: {$ne: true}
+        });
+        // Create structure for filling the fields in the tex files. 
+        let filtered_data = {photoDir: "../photos/"};
+        for(var i = 0; i < data.length; i++){
+            for(field of ["_id", "firstname", "lastname", "phone", "email"]){
+                filtered_data[`m${i}${field}`] = data[i][field];
+            }
+        }
+        if(data.length > 6) continue;
+        // Load the fields in the tex files with data. 
+        let part = await readTexPiece(`./booklet_pieces/apt${data.length}people.tex`, filtered_data);
+        members[apt] = await readTexPiece("./booklet_pieces/apttemplate.tex", {aptName: apt, aptLayout: part});
     }
-
-    return `\\begin{center}
-
-\\textbf{\\Huge ${name}}
-
-\\vspace{2cm}
-
-${page}
-
-\\end{center}
-`;
-}
-
-function createApartmentPage(name, members){
-    var result = "";
-    result += "\\begin{center}\n";
-    result += "";
-    result += "\\textbf{\\Huge " + name + "}\n";
-    result += "\n";
-    result += "\\vspace{2cm}\n";
-    result += "\n";
-    switch(members.length){
-        case 0:
-            result += "\\vspace{3cm}\n";
-            result += "\n";
-            result += "Nobody lives here. \n";
-        break;
-        case 1:
-            result += "\\vspace{3cm}\n";
-            result += "\n";
-            result += "\\includegraphics[scale=\\picscale]{../photos/" + members[0]._id + ".jpg} \\\\\n";
-            result += members[0].firstname + " " + members[0].lastname + " \\\\\n";
-            result += members[0].phone + " \\\\\n";
-            result += members[0].email + " \\\\\n";
-        break;
-        case 2:
-            result += "\\vspace{3cm}\n";
-            result += "\n";
-            result += "\\begin{tabular}{c c c}\n";
-            result += "\\includegraphics[scale=\\picscale]{../photos/" + members[0]._id + ".jpg} & & ";
-            result += "\\includegraphics[scale=\\picscale]{../photos/" + members[1]._id + ".jpg} \\\\\n";
-            result += members[0].firstname + " " + members[0].lastname + " & & ";
-            result += members[1].firstname + " " + members[1].lastname + " \\\\\n";
-            result += members[0].phone + " & & ";
-            result += members[1].phone + " \\\\\n";
-            result += members[0].email + " & & ";
-            result += members[1].email + " \\\\\n";
-            result += "\\end{tabular}\n";
-        break;
-        case 3:
-            result += "\\setlength{\\tabcolsep}{5pt}\n"
-            result += "\\begin{tabular}{c c c}\n";
-            result += "\\includegraphics[scale=\\picscale]{../photos/" + members[0]._id + ".jpg} & & ";
-            result += "\\includegraphics[scale=\\picscale]{../photos/" + members[1]._id + ".jpg} \\\\\n";
-            result += members[0].firstname + " " + members[0].lastname + " & & ";
-            result += members[1].firstname + " " + members[1].lastname + " \\\\\n";
-            result += members[0].phone + " & & ";
-            result += members[1].phone + " \\\\\n";
-            result += members[0].email + " & & ";
-            result += members[1].email + " \\\\\n";
-            result += "& \\includegraphics[scale=\\picscale]{../photos/" + members[2]._id + ".jpg} \\\\\n";
-            result += "& " + members[2].firstname + " " + members[2].lastname + " \\\\\n";
-            result += "& " + members[2].phone + " \\\\\n";
-            result += "& " + members[2].email + " \\\\\n";
-            result += "\\end{tabular}\n";
-            result += "\\setlength{\\tabcolsep}{17pt}\n"
-        break;
-        case 4:
-            result += "\\begin{tabular}{c c c}\n";
-            var i = 0;
-            let hspace = "\\hspace{.5cm}"
-            for(i = 0; i < 4; i+=2){
-                result += "\\includegraphics[scale=\\picscale]{../photos/" + members[0 + i]._id + ".jpg} & ";
-                result += hspace + " & ";
-                result += "\\includegraphics[scale=\\picscale]{../photos/" + members[1 + i]._id + ".jpg} \\\\\n";
-                result += members[0 + i].firstname + " " + members[0 + i].lastname + " & ";
-                result += hspace + " & ";
-                result += members[1 + i].firstname + " " + members[1 + i].lastname + " \\\\\n";
-                result += members[0 + i].phone + " & ";
-                result += hspace + " & ";
-                result += members[1 + i].phone + " \\\\\n";
-                result += members[0 + i].email + " & ";
-                result += hspace + " & ";
-                result += members[1 + i].email + " \\\\\n";
-            }
-            result += "\\end{tabular}\n";
-        break;
-        case 5:
-            result += "\\begin{tabular}{c c c}\n";
-            var i = 0;
-            for(i = 0; i < 3; i++){
-                result += "\\includegraphics[scale=\\picscale]{../photos/" + members[i]._id + ".jpg} " + ((i < 2)?"& ":"\\\\\n");
-            }
-            for(i = 0; i < 3; i++){
-                result += members[i].firstname + " " + members[i].lastname + ((i < 2)?" & ":" \\\\\n");
-            }
-            for(i = 0; i < 3; i++){
-                result += members[i].phone + ((i < 2)?" & ":" \\\\\n");
-            }
-            for(i = 0; i < 3; i++){
-                result += members[i].email + ((i < 2)?" & ":" \\\\\n");
-            }
-            result += "\\end{tabular}\n";
-            result += "\\begin{tabular}{c c}";
-            for(i = 3; i < 5; i++){
-                result += "\\includegraphics[scale=\\picscale]{../photos/" + members[i]._id + ".jpg} " + ((i < 4)?"& ":"\\\\\n");
-            }
-            for(i = 3; i < 5; i++){
-                result += members[i].firstname + " " + members[i].lastname + ((i < 4)?" & ":" \\\\\n");
-            }
-            for(i = 3; i < 5; i++){
-                result += members[i].phone + ((i < 4)?" & ":" \\\\\n");
-            }
-            for(i = 3; i < 5; i++){
-                result += members[i].email + ((i < 4)?" & ":" \\\\\n");
-            }
-            result += "\\end{tabular}\n";
-        break;
-        case 6:
-            result += "\\begin{tabular}{c c c}\n";
-            var i = 0;
-            for(i = 0; i < 3; i++){
-                result += "\\includegraphics[scale=\\picscale]{../photos/" + members[i]._id + ".jpg} " + ((i < 2)?"& ":"\\\\\n");
-            }
-            for(i = 0; i < 3; i++){
-                result += members[i].firstname + " " + members[i].lastname + ((i < 2)?" & ":" \\\\\n");
-            }
-            for(i = 0; i < 3; i++){
-                result += members[i].phone + ((i < 2)?" & ":" \\\\\n");
-            }
-            for(i = 0; i < 3; i++){
-                result += members[i].email + ((i < 2)?" & ":" \\\\\n");
-            }
-            for(i = 3; i < 6; i++){
-                result += "\\includegraphics[scale=\\picscale]{../photos/" + members[i]._id + ".jpg} " + ((i < 5)?"& ":"\\\\\n");
-            }
-            for(i = 3; i < 6; i++){
-                result += members[i].firstname + " " + members[i].lastname + ((i < 5)?" & ":" \\\\\n");
-            }
-            for(i = 3; i < 6; i++){
-                result += members[i].phone + ((i < 5)?" & ":" \\\\\n");
-            }
-            for(i = 3; i < 6; i++){
-                result += members[i].email + ((i < 5)?" & ":" \\\\\n");
-            }
-            result += "\\end{tabular}\n";
-        break;
-        default:
-            result += "\\vspace{3cm}\n";
-            result += "\n";
-            result += "Something went wrong in compiling. There is probably too many people in this apartment";
-        break;
-    }
-    result += "\\end{center}\n"
-    return result;
-}
-
-async function createBishopricPageAlt(){
-    let bishop = await Member.findOne({
-        calling: "Bishopric;Bishop"
-    });
-    let firstCounselor = await Member.findOne({
-        calling: "Bishopric;1st Counselor"
-    });
-    let secondCounselor = await Member.findOne({
-        calling: "Bishopric;2nd Counselor"
-    });
-    let highCounselor = await Member.findOne({
-        calling: "Bishopric;Assigned Stake High Counselor"
-    });
-    if(!bishop && !firstCounselor && !secondCounselor && !highCounselor){
-        result += "You need to have all 4 members of the bishopbric. \n"
-        result += "\\end{center}\n";
-        return `\\begin{center}
-
-\\textbf{\\Huge Bishopric}
-You need to have all 4 members of the bishopbric.
-\\end{center}
-`;
-    }
-    
+    let apartmentPages = await readTexPiece("./booklet_pieces/aptnamelist.tex", members);
+    return apartmentPages;
 }
 
 async function createBishopricPage(){
-    var result = "";
-    result += "\\begin{center}\n";
-    result += "";
-    result += "\\textbf{\\Huge Bishopric}\n";
-    //result += "\n";
-    //result += "\\vspace{2cm}\n";
-    result += "\n";
-    let hspace = "\\hspace{.25cm}";
-    let bishop = await Member.findOne({
+    let data = {};
+    let filtered_data = {photoDir: "../photos/"};
+    data["bishop"] = await Member.findOne({
         calling: "Bishopric;Bishop"
     });
-    let bishopWife = await Member.findOne({
-        lastname: bishop.lastname,
-        firstname: {$ne: bishop.firstname}
+    data["bishopWife"] = await Member.findOne({
+        lastname: data["bishop"].lastname,
+        firstname: {$ne: data["bishop"].firstname}
     })
-    let firstCounselor = await Member.findOne({
+    data["firstCounselor"] = await Member.findOne({
         calling: "Bishopric;1st Counselor"
     });
-    let firstCounselorWife = await Member.findOne({
-        lastname: firstCounselor.lastname,
-        firstname: {$ne: firstCounselor.firstname}
+    data["firstCounselorWife"] = await Member.findOne({
+        lastname: data["firstCounselor"].lastname,
+        firstname: {$ne: data["firstCounselor"].firstname}
     })
-    let secondCounselor = await Member.findOne({
+    data["secondCounselor"] = await Member.findOne({
         calling: "Bishopric;2nd Counselor"
     });
-    let secondCounselorWife = await Member.findOne({
-        lastname: secondCounselor.lastname,
-        firstname: {$ne: secondCounselor.firstname}
+    data["secondCounselorWife"] = await Member.findOne({
+        lastname: data["secondCounselor"].lastname,
+        firstname: {$ne: data["secondCounselor"].firstname}
     })
-    let highCounselor = await Member.findOne({
+    data["highCounselor"] = await Member.findOne({
         calling: "Bishopric;Assigned Stake High Counselor"
     });
-    let highCounselorWife = await Member.findOne({
-        lastname: highCounselor.lastname,
-        firstname: {$ne: highCounselor.firstname}
+    data["highCounselorWife"] = await Member.findOne({
+        lastname: data["highCounselor"].lastname,
+        firstname: {$ne: data["highCounselor"].firstname}
     })
-    if(!bishop && !firstCounselor && !secondCounselor && !highCounselor 
-        && !bishopWife && !firstCounselorWife && !secondCounselorWife && !highCounselorWife){
-        result += "You need to have all 4 members of the bishopbric. \n"
-        result += "\\end{center}\n";
-        return result;
-    }
-    result += "\\renewcommand{\\picscale}{1}\n";
-    result += "\\renewcommand{\\arraystretch}{1}\n";
-    result += "\\begin{tabular}{c c}\n";
-    // console.log(bishop);
-    // console.log(firstCounselor);
-    // console.log(secondCounselor);
-    // console.log(highCounselor);
-    result += "\\includegraphics[width=8cm]{../photos/" + bishop._id + ".jpg} & ";
-    //result += hspace + " & ";
-    result += "\\includegraphics[width=8cm]{../photos/" + firstCounselor._id + ".jpg} \\\\\n";
-    result += "Bishop & ";
-    //result += hspace + " & ";
-    result += "1st Counselor \\\\\n";
-    result += bishop.firstname +" \\& " + bishopWife.firstname + " " + bishop.lastname + " & ";
-    //result += hspace + " & ";
-    result += firstCounselor.firstname + " \\& " + firstCounselorWife.firstname + " " + firstCounselor.lastname + " \\\\\n";
-    result += bishop.phone + " & ";
-    //result += hspace + " & ";
-    result += firstCounselor.phone + " \\\\\n";
-    result += bishop.email + " & ";
-    //result += hspace + " & ";
-    result += firstCounselor.email + " \\\\\n";
-    result += bishop.address.split(";")[0] + " & ";
-    //result += hspace + " & ";
-    result += firstCounselor.address.split(";")[0] + " \\\\\n";
-    result += bishop.address.split(";")[1] + " & ";
-    //result += hspace + " & ";
-    result += firstCounselor.address.split(";")[1] + " \\\\\n";
     
-    result += "\\includegraphics[width=8cm]{../photos/" + secondCounselor._id + ".jpg} & ";
-    //result += hspace + " & ";
-    result += "\\includegraphics[width=8cm]{../photos/" + highCounselor._id + ".jpg} \\\\\n";
-    result += "2nd Counselor & ";
-    //result += hspace + " & ";
-    result += "Assigned Stake High Counselor \\\\\n";
-    result += secondCounselor.firstname + " \\& " + secondCounselorWife.firstname + " " + secondCounselor.lastname + " & ";
-    //result += hspace + " & ";
-    result += highCounselor.firstname + " \\& " + highCounselorWife.firstname + " " + highCounselor.lastname + " \\\\\n";
-    result += secondCounselor.phone + " & ";
-    //result += hspace + " & ";
-    result += highCounselor.phone + " \\\\\n";
-    result += secondCounselor.email + " & ";
-    //result += hspace + " & ";
-    result += highCounselor.email + " \\\\\n";
-    result += secondCounselor.address.split(";")[0] + " & ";
-    //result += hspace + " & ";
-    result += highCounselor.address.split(";")[0] + " \\\\\n";
-    result += secondCounselor.address.split(";")[1] + " & ";
-    //result += hspace + " & ";
-    result += highCounselor.address.split(";")[1] + " \\\\\n";
-
-    result += "\\end{tabular}\n";
-    result += "\\end{center}\n"
-    result += "\\renewcommand{\\picscale}{.7}\n";
-    result += "\\renewcommand{\\arraystretch}{1.75}\n";
-    return result;
+    for(person in data){
+        if(!data[person]){
+            throw new Error("All of the bishopric and their wives need to exist to create the booklet.");
+        }
+        for(field of ["_id", "firstname", "lastname", "phone", "email"]){
+            filtered_data[`${person}${field}`] = data[person][field]
+        }
+        if(person.includes("Wife")) continue;
+        let address = data[person]["address"].split(";")
+        filtered_data[`${person}street`] = address[0];
+        filtered_data[`${person}city`] = address[1];
+    }
+    return await readTexPiece("./booklet_pieces/bishopricpage.tex", filtered_data);
 }
 
 async function createLeadershipPage(){
