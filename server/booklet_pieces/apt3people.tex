@@ -1,15 +1,15 @@
 \setlength{\tabcolsep}{5pt}
 
 \begin{tabular}{c c c}
-\includegraphics[scale=\picscale]{{{photoDir}}{{m0_id}}.jpg} & & 
-\includegraphics[scale=\picscale]{{{photoDir}}{{m1_id}}.jpg} \\
-{{m0firstname}} {{m0lastname}} & & {{m1firstname}} {{m1lastname}} \\
-{{m0phone}} & & {{m1phone}} \\
-{{m0email}} & & {{m1email}} \\
-& \includegraphics[scale=\picscale]{{{photoDir}}{{m2_id}}.jpg} \\
-& {{m2firstname}} {{m2lastname}} \\
-& {{m2phone}} \\
-& {{m2email}} \\
+\includegraphics[scale=\picscale]{{{photoDir}}{{m[0]._id}}.jpg} & & 
+\includegraphics[scale=\picscale]{{{photoDir}}{{m[1]._id}}.jpg} \\
+{{m[0].firstname}} {{m[0].lastname}} & & {{m[1].firstname}} {{m[1].lastname}} \\
+{{m[0].phone}} & & {{m[1].phone}} \\
+{{m[0].email}} & & {{m[1].email}} \\
+& \includegraphics[scale=\picscale]{{{photoDir}}{{m[2]._id}}.jpg} \\
+& {{m[2].firstname}} {{m[2].lastname}} \\
+& {{m[2].phone}} \\
+& {{m[2].email}} \\
 \end{tabular}
 
 \setlength{\tabcolsep}{17pt}
