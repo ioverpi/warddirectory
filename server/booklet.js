@@ -105,7 +105,7 @@ function genPages(num){
     return "{" + arr.join() + "}";
 }
 
-function parseStringUpdated(str, variables){
+function parseString(str, variables){
     function getValue(obj, parts){
         if(typeof obj[parts[0]] != "object" || parts[0] == "_id"){
             return obj[parts[0]]
@@ -135,7 +135,7 @@ function parseStringUpdated(str, variables){
 
 async function readTexPiece(filename, variables){
     let piece = await fs.readFile(filename, "utf8");
-    return parseStringUpdated(piece, variables);
+    return parseString(piece, variables);
 }
 
 //readTexPiece("apt1people.tex", {m0_id:"asdf", photoDir:"../photo/", m0firstname:"Jim", m0lastname:"Apple", m0phone:"(801) 123-4567", m0email:"cool@email.com"})
@@ -225,8 +225,9 @@ async function createApartmentPageBlock(order = "byapartment"){
             hidden: {$ne: true}
         }).sort({lastname: 1});
 
-        let page = 1;
+        let page = 0;
         while(memberCollection.length > 0){
+            page++;
             let data = {};
             data.m = [];
             while(data.m.length < 6 && memberCollection.length > 0){
@@ -235,9 +236,9 @@ async function createApartmentPageBlock(order = "byapartment"){
             data.photoDir = photoDir;
             let part = await readTexPiece(`./booklet_pieces/apt${data.m.length}people.tex`, data);
             members[page] = await readTexPiece("./booklet_pieces/apttemplate.tex", {aptName: page, aptLayout: part});
-            page++;
         }
-        let apartmentPages = await readTexPiece("./booklet_pieces/alphabeticallist.tex", members);
+        //let apartmentPages = await readTexPiece("./booklet_pieces/alphabeticallist.tex", members);
+        let apartmentPages = parseString(genAlphabeticalFormat(page), members);
         return apartmentPages;
     }
     else{
@@ -258,6 +259,28 @@ async function createApartmentPageBlock(order = "byapartment"){
         let apartmentPages = await readTexPiece("./booklet_pieces/aptnamelist.tex", members);
         return apartmentPages;
     }
+}
+
+function genAlphabeticalFormat(length){
+    let parts = [];
+    for(var i = 0; i < length; i++){
+        parts.push(`{{${i+1}}}
+
+\\pagebreak
+
+`);  
+    }
+
+    while((parts.length+1) % 4 != 0){
+        parts.push(`\\begin{center}
+Page intentionally left blank
+\\end{center}
+
+\\pagebreak
+
+`);
+    }
+    return parts.join("");
 }
 
 async function createBishopricPage(){
