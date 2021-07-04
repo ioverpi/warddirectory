@@ -142,6 +142,8 @@ async function readTexPiece(filename, variables){
 
 async function genBooklet(userId){
     await loadVariables(userId);
+    console.log(await createApartmentPageBlock("alphabetical"));
+    return;
     let data = {
         frontCover: await createFrontCover(),
         bishopricPage: await createBishopricPage(),
@@ -152,8 +154,8 @@ async function genBooklet(userId){
     }
     finalBooklet = await readTexPiece(`./booklet_pieces/structure.tex`, data);
     await createPDF(finalBooklet);
-    await createPDFLandscape(landscapeString(genPages(32), "temp.pdf")); //TODO: figure out how many pages are in a pdf. 
-    await renamePDF();
+    //await createPDFLandscape(landscapeString(genPages(32), "temp.pdf")); //TODO: figure out how many pages are in a pdf. 
+    //await renamePDF();
 }
 
 function getYear(){
@@ -205,23 +207,47 @@ async function createPDFLandscape(str){
 //Variables
 let photoDir = "../photos/";
 
-async function createApartmentPageBlock(){
-    let members = {}
-    for(apt of variables.apartments){
-        // Get data from database
-        let data = {};
-        data.m = await Member.find({
-            apt: apt,
+async function createApartmentPageBlock(order = "byapartment"){
+    if(order == "alphabetical"){
+        let members = {};
+        let memberCollection = await Member.find({
+            apt: {$ne: "Bishopric"},
             hidden: {$ne: true}
-        });
-        data.photoDir = photoDir;
-        if(data.m.length > 6) continue;
-        // Load the fields in the tex files with data. 
-        let part = await readTexPiece(`./booklet_pieces/apt${data.m.length}people.tex`, data);
-        members[apt] = await readTexPiece("./booklet_pieces/apttemplate.tex", {aptName: apt, aptLayout: part});
+        }).sort({lastname: 1});
+
+        let page = 1;
+        while(memberCollection.length > 0){
+            let data = {};
+            data.m = [];
+            while(data.m.length < 6 && memberCollection.length > 0){
+                data.m.push(memberCollection.shift());
+            }
+            data.photoDir = photoDir;
+            let part = await readTexPiece(`./booklet_pieces/apt${data.m.length}people.tex`, data);
+            members[page] = await readTexPiece("./booklet_pieces/apttemplate.tex", {aptName: page, aptLayout: part});
+            page++;
+        }
+        let apartmentPages = await readTexPiece("./booklet_pieces/alphabeticallist.tex", members);
+        return apartmentPages;
     }
-    let apartmentPages = await readTexPiece("./booklet_pieces/aptnamelist.tex", members);
-    return apartmentPages;
+    else{
+        let members = {};
+        for(apt of variables.apartments){
+            // Get data from database
+            let data = {};
+            data.m = await Member.find({
+                apt: apt,
+                hidden: {$ne: true}
+            });
+            data.photoDir = photoDir;
+            if(data.m.length > 6) continue;
+            // Load the fields in the tex files with data. 
+            let part = await readTexPiece(`./booklet_pieces/apt${data.m.length}people.tex`, data);
+            members[apt] = await readTexPiece("./booklet_pieces/apttemplate.tex", {aptName: apt, aptLayout: part});
+        }
+        let apartmentPages = await readTexPiece("./booklet_pieces/aptnamelist.tex", members);
+        return apartmentPages;
+    }
 }
 
 async function createBishopricPage(){
