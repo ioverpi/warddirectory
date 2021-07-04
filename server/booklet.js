@@ -105,18 +105,8 @@ function genPages(num){
     return "{" + arr.join() + "}";
 }
 
-function parseString(str, variables){ //This might come in handy. 
-	for(x in variables){
-		str = str.replace(new RegExp("{{"+x+"}}", "g"), variables[x]);
-	}
-	let missingArgument = str.match(/{{(([^}][^}]?|[^}]}?)*)}}/);
-	if(missingArgument) throw new Error("Missing a value for the argument " + missingArgument[1] + ".");
-	return str;
-}
-
 function parseStringUpdated(str, variables){
     function getValue(obj, parts){
-        //console.log(typeof obj[parts[0]]);
         if(typeof obj[parts[0]] != "object" || parts[0] == "_id"){
             return obj[parts[0]]
         }
@@ -152,48 +142,15 @@ async function readTexPiece(filename, variables){
 
 async function genBooklet(userId){
     await loadVariables(userId);
-    /*let data = {};
-    data.m = await Member.find({
-        apt: "S301",
-        hidden: {$ne: true}
-    });
-    console.log(data.m[0]._id.toString());
-    data.photoDir = "../photos/";
-    let part = await readTexPiece(`./booklet_pieces/test.tex`, data);
-    console.log(part);
-    await createApartmentPageBlock()*/
-    console.log(await createBishopricPage());
-}
-
-async function genBookletOld(userId){
-    await loadVariables(userId);
-    let members = [];
-    for(let i = 0; i < variables.apartments.length; i++){
-        members[i] = await Member.find({
-            apt: variables.apartments[i],
-            hidden: {$ne: true}
-        });
+    let data = {
+        frontCover: await createFrontCover(),
+        bishopricPage: await createBishopricPage(),
+        leadershipPage: await createLeadershipPage(),
+        apartmentPages: await createApartmentPageBlock(),
+        emergencyInfoPage: await createEmergencyInfoPage(),
+        backCover: await createBackCover()
     }
-    
-    var pb = "\\pagebreak\n";
-    var finalBooklet = createFirstPart();
-    finalBooklet += createFrontCover();
-    finalBooklet += pb;
-    finalBooklet += await createBishopricPage();
-    finalBooklet += pb;
-    finalBooklet += await createLeadershipPage();
-    finalBooklet += pb;
-    finalBooklet += createApartmentPage(variables.apartments[1], members[1]);
-    for(let i = 2; i < variables.apartments.length; i++){
-        finalBooklet += pb;
-        finalBooklet += createApartmentPage(variables.apartments[i], members[i]);
-    }
-    finalBooklet += pb;
-    finalBooklet += createEmergencyInfoPage();
-    finalBooklet += pb;
-    finalBooklet += createBackCover();
-    finalBooklet += createLastPart();
-    //console.log(finalBooklet);
+    finalBooklet = await readTexPiece(`./booklet_pieces/structure.tex`, data);
     await createPDF(finalBooklet);
     await createPDFLandscape(landscapeString(genPages(32), "temp.pdf")); //TODO: figure out how many pages are in a pdf. 
     await renamePDF();
@@ -394,130 +351,23 @@ async function createLeadershipPage(){
     return result;
 }
 
-function createEmergencyInfoPage(){
-    var result = "";
-    result += "\\begin{center}\n";
-	result += "\\textbf{\\huge Personal Emergency Response}\n";
-    result += "\\end{center}\n";
-    result += "\n";
-    result += "\\begin{itemize}\n";
-	result += "\\item \\textbf{Food}\n";
-	result += "\n";
-	result += "Keep one week worth of groceries on hand at all times, along with food for emergencies (granola bars, etc.)\n";
-    result += "\n";
-	result += "Keep at least a 3-day supply of emergency water (one gallon per person per day).\n";
-    result += "\n";
-	result += "\\item \\textbf{Transportation}\n";
-	result += "\n";
-	result += "Keep your car’s gas tank at least half full at all times.\n";
-    result += "\n";
-	result += "\\item \\textbf{Money}\n";
-	result += "\n";
-	result += "Have enough money available to get to your parent’s home (if that is where you would go in case of an emergency).\n";
-    result += "\n";
-	result += "\\item \\textbf{Communication}\n";
-	result += "\n";
-	result += "Have your cell phone programmed to call family and other important people in your life. Program an ICE (In Case of Emergency) number in your cell phone directory.\n";
-    result += "\n";
-	result += "Designate an out of area family member as a family communication contact.\n";
-    result += "\n";
-	result += "Keep your roommates/spouse apprised of your whereabouts.\n";
-	result += "\n";
-	result += "Know about emergency info sources, including KSL AM1160 and FM 102.7 and KBYU FM 89.1 and 89.5. Remember that your car radio is a source for emergency info.\n";
-	result += "\n";
-	result += "\\item \\textbf{Other Emergency Items}\n";
-	result += "\n";
-	result += "Designate a place for meeting your roommates, or your spouse and children (right outside your home for emergencies such as fires, and outside your neighborhood if you can’t get home).\n";
-	result += "\n";
-	result += "Be aware of your ward’s emergency response plan, especially the ward emergency locations.\n";
-    result += "\n";
-	result += "Identify primary and alternate escape routes out of your home and conduct drills with your family/roommates.\n";
-	result += "\n";
-	result += "Keep all needed medications readily available (one-week supply).\n";
-	result += "\n";
-	result += "Have items available for warmth in cold weather (coats, blankets, etc)\n";
-	result += "\n";
-	result += "Keep insurance policies (policy \\# and contact information) available, along with any other important documents, such as birth certificates and marriage licenses.\n";
-	result += "\n";
-	result += "Learn what to do for the different hazards that could impact you or your family.\n";
-	result += "\n";
-	result += "Go to http://risk.byu.edu/emergency for more information\n";
-    result += "\\end{itemize}\n";
-    result += "\\textbf{The Provo YSA 32nd Ward emergency meeting place is the space in between the Thomas L. Martin Building (MARB) and Life Science Building (LSB).}\n";
-    return result;
+async function createEmergencyInfoPage(){
+    return await readTexPiece("./booklet_pieces/emergencyinfopage.tex", {});
 }
 
-function createFrontCover(){
-    var result="";
-    result += "\n";
-    result += "\\begin{center}\n";
-	result += "\\vspace*{2cm}\n";
-	result += "\n";
-	result += "\\textbf{\\Large Provo YSA 32nd Ward}\n";
-	result += "\n";
-	result += "\\vspace{2mm}\n";
-	result += "\n";
-    result += "\\textbf{\\Large " + getSemester() + " Semester " + getYear() + "}\n";
-	result += "\n";
-	result += "\\vspace{1cm}\n";
-	result += "\n";
-	result += "\\includegraphics[width=16cm, trim={0 12cm 0 0}, clip]{../photos/emptytomb.jpg}\n";
-	result += "\n";
-	result += "\\vspace{2cm}\n";
-	result += "\n";
-	result += "\\textbf{\\textit{FOR CHURCH USE ONLY}}\n";
-    result += "\\end{center}\n";
-    return result;
+async function createFrontCover(){
+    let data = {
+        semester: getSemester(), 
+        year: getYear(), 
+        photoDir: photoDir,
+        photoName: "emptytomb.jpg"
+    }; 
+    return await readTexPiece("./booklet_pieces/frontcover.tex", data);
 }
 
-function createBackCover(){
-    var result = "";
-    result += "\\begin{center}\n";
-	result += "\\includegraphics[width=9cm]{../photos/presnelson.jpg}\n";
-    result += "\\end{center}\n";
-    result += "\n";
-    result += "\\begin{large}\n";
-	result += "``Nothing is more liberating, more ennobling, or more crucial to our individual progression than is a regular, daily focus on repentance. Repentance is not an event; it is a process. It is the key to happiness and peace of mind. When coupled with faith, repentance opens our access to the power of the Atonement of Jesus Christ.\n";
-	result += "\n";
-	result += "Whether you are diligently moving along the covenant path, have slipped or stepped from the covenant path, or can’t even see the path from where you are now, I plead with you to repent. Experience the strengthening power of daily repentance --- of doing and being a little better each day.\n";
-	result += "\n";
-	result += "When we choose to repent, we choose to change! We allow the Savior to transform us into the best version of ourselves. We choose to grow spiritually and receive joy --- the joy of redemption in Him. When we choose to repent, we choose to become more like Jesus Christ!\"\n";
-	result += "\n";
-	result += "--- President Russell M. Nelson (We Can Do Better and Be Better)\n";
-	result += "\n";
-    result += "\\end{large}\n";
-    return result;
-}
-
-function createFirstPart(){
-    var result = "";
-    result += "\\documentclass[12pt]{article}\n";
-    result += "\\usepackage[utf8]{inputenc}\n";
-    result += "\n";
-    result += "\\usepackage[top=1in,left=.5in,right=.5in,bottom=.5in]{geometry}\n";
-    result += "\\usepackage[space]{grffile}\n";
-    result += "\n";
-    //%\usepackage[landscape]{geometry}
-    result += "\\usepackage{graphicx}\n";
-    result += "\\newcommand\\picscale{.65}\n";
-    result += "\\renewcommand{\\arraystretch}{1.75}\n";
-    result += "\\setlength{\\tabcolsep}{17pt}\n";
-    result += "\\pagenumbering{gobble}\n";
-    result += "\\usepackage{multirow}\n";
-    result += "\\usepackage{multicol}\n";
-    result += "\n";
-    //\title{Ward Directory}
-    //\author{kellon08 }
-    //\date{October 2019}
-
-    result += "\\begin{document}\n"
-    return result;
-}
-
-function createLastPart(){
-    var result = "";
-    result += "\\end{document}";
-    return result;
+async function createBackCover(){
+    let data = {photoDir: photoDir}; 
+    return await readTexPiece("./booklet_pieces/backcover.tex", data);
 }
 
 module.exports = router;
