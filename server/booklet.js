@@ -142,21 +142,22 @@ async function readTexPiece(filename, variables){
 
 async function genBooklet(userId){
     await loadVariables(userId);
-    console.log(await createApartmentPageBlock("alphabetical"));
-    return;
     let data = {
         frontCover: await createFrontCover(),
         bishopricPage: await createBishopricPage(),
         leadershipPage: await createLeadershipPage(),
-        apartmentPages: await createApartmentPageBlock(),
+        apartmentPages: await createApartmentPageBlock("alphabetical"),
         emergencyInfoPage: await createEmergencyInfoPage(),
         backCover: await createBackCover()
     }
     finalBooklet = await readTexPiece(`./booklet_pieces/structure.tex`, data);
+    console.log(finalBooklet.match(/pagebreak/g).length);
     await createPDF(finalBooklet);
-    //await createPDFLandscape(landscapeString(genPages(32), "temp.pdf")); //TODO: figure out how many pages are in a pdf. 
-    //await renamePDF();
+    await createPDFLandscape(landscapeString(genPages(getBookletLength(finalBooklet)), "temp.pdf")); //TODO: figure out how many pages are in a pdf. 
+    await renamePDF();
 }
+
+const getBookletLength = (bookletString) => bookletString.match(/pagebreak/g).length + 1
 
 function getYear(){
     return (new Date()).getFullYear();
@@ -202,6 +203,15 @@ async function createPDFLandscape(str){
     } catch(error){
         //I don't know what to put here at the moment...
     }
+}
+
+function landscapeString(pageOrder, bookletName){
+    return `\\documentclass{article}
+\\usepackage{pdfpages}
+\\begin{document}
+\\pagestyle{plain}
+\\includepdf[pages=${pageOrder}, nup=1x2, landscape]{${bookletName}}
+\\end{document}`;
 }
 
 //Variables
