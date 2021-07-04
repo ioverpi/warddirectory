@@ -116,6 +116,7 @@ function parseString(str, variables){ //This might come in handy.
 
 function parseStringUpdated(str, variables){
     function getValue(obj, parts){
+        console.log(typeof obj[parts[0]]);
         if(typeof obj[parts[0]] != "object"){
             return obj[parts[0]]
         }
@@ -144,15 +145,23 @@ function parseStringUpdated(str, variables){
 
 async function readTexPiece(filename, variables){
     let piece = await fs.readFile(filename, "utf8");
-    return parseString(piece, variables);
+    return parseStringUpdated(piece, variables);
 }
 
 //readTexPiece("apt1people.tex", {m0_id:"asdf", photoDir:"../photo/", m0firstname:"Jim", m0lastname:"Apple", m0phone:"(801) 123-4567", m0email:"cool@email.com"})
 
 async function genBooklet(userId){
     await loadVariables(userId);
-    
-    console.log(await createBishopricPage());
+    let data = {};
+    data.m = await Member.find({
+        apt: "S301",
+        hidden: {$ne: true}
+    });
+    data.photoDir = "../photos/";
+    let part = await readTexPiece(`./booklet_pieces/test.tex`, data);
+    console.log(part);
+    //await createApartmentPageBlock()
+    //console.log(await createApartmentPageBlock());
 }
 
 async function genBookletOld(userId){
@@ -242,10 +251,12 @@ async function createApartmentPageBlock(){
     let members = {}
     for(apt of variables.apartments){
         // Get data from database
-        let data = await Member.find({
+        let data = {};
+        data.m = await Member.find({
             apt: apt,
             hidden: {$ne: true}
         });
+        data.photoDir = "../photos/";
         // Create structure for filling the fields in the tex files. 
         let filtered_data = {photoDir: "../photos/"};
         for(var i = 0; i < data.length; i++){
@@ -253,9 +264,9 @@ async function createApartmentPageBlock(){
                 filtered_data[`m${i}${field}`] = data[i][field];
             }
         }
-        if(data.length > 6) continue;
+        if(data.m.length > 6) continue;
         // Load the fields in the tex files with data. 
-        let part = await readTexPiece(`./booklet_pieces/apt${data.length}people.tex`, filtered_data);
+        let part = await readTexPiece(`./booklet_pieces/apt${data.m.length}people.tex`, data);
         members[apt] = await readTexPiece("./booklet_pieces/apttemplate.tex", {aptName: apt, aptLayout: part});
     }
     let apartmentPages = await readTexPiece("./booklet_pieces/aptnamelist.tex", members);
