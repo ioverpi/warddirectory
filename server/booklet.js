@@ -116,8 +116,8 @@ function parseString(str, variables){ //This might come in handy.
 
 function parseStringUpdated(str, variables){
     function getValue(obj, parts){
-        console.log(typeof obj[parts[0]]);
-        if(typeof obj[parts[0]] != "object"){
+        //console.log(typeof obj[parts[0]]);
+        if(typeof obj[parts[0]] != "object" || parts[0] == "_id"){
             return obj[parts[0]]
         }
         return getValue(obj[parts.shift()], parts)
@@ -152,16 +152,17 @@ async function readTexPiece(filename, variables){
 
 async function genBooklet(userId){
     await loadVariables(userId);
-    let data = {};
+    /*let data = {};
     data.m = await Member.find({
         apt: "S301",
         hidden: {$ne: true}
     });
+    console.log(data.m[0]._id.toString());
     data.photoDir = "../photos/";
     let part = await readTexPiece(`./booklet_pieces/test.tex`, data);
     console.log(part);
-    //await createApartmentPageBlock()
-    //console.log(await createApartmentPageBlock());
+    await createApartmentPageBlock()*/
+    console.log(await createBishopricPage());
 }
 
 async function genBookletOld(userId){
@@ -256,14 +257,7 @@ async function createApartmentPageBlock(){
             apt: apt,
             hidden: {$ne: true}
         });
-        data.photoDir = "../photos/";
-        // Create structure for filling the fields in the tex files. 
-        let filtered_data = {photoDir: "../photos/"};
-        for(var i = 0; i < data.length; i++){
-            for(field of ["_id", "firstname", "lastname", "phone", "email"]){
-                filtered_data[`m${i}${field}`] = data[i][field];
-            }
-        }
+        data.photoDir = photoDir;
         if(data.m.length > 6) continue;
         // Load the fields in the tex files with data. 
         let part = await readTexPiece(`./booklet_pieces/apt${data.m.length}people.tex`, data);
@@ -275,7 +269,6 @@ async function createApartmentPageBlock(){
 
 async function createBishopricPage(){
     let data = {};
-    let filtered_data = {photoDir: "../photos/"};
     data["bishop"] = await Member.findOne({
         calling: "Bishopric;Bishop"
     });
@@ -309,15 +302,14 @@ async function createBishopricPage(){
         if(!data[person]){
             throw new Error("All of the bishopric and their wives need to exist to create the booklet.");
         }
-        for(field of ["_id", "firstname", "lastname", "phone", "email"]){
-            filtered_data[`${person}${field}`] = data[person][field]
-        }
         if(person.includes("Wife")) continue;
         let address = data[person]["address"].split(";")
-        filtered_data[`${person}street`] = address[0];
-        filtered_data[`${person}city`] = address[1];
+        data[person].street = address[0];
+        data[person].city = address[1];
     }
-    return await readTexPiece("./booklet_pieces/bishopricpage.tex", filtered_data);
+
+    data.photoDir = photoDir;
+    return await readTexPiece("./booklet_pieces/bishopricpage.tex", data);
 }
 
 async function createLeadershipPage(){
