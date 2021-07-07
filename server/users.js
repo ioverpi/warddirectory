@@ -99,11 +99,23 @@ async function genTokenSendEmail(user, res) {
             return;
         }
 
+        /* Gmail is finnicky!!
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
                 user: process.env.EMAIL_ADDRESS, 
                 pass: process.env.EMAIL_PASSWORD
+            }
+        });
+        */ 
+
+        const transporter = nodemailer.createTransport({
+            host: "byu3.reclaimhosting.com",
+            port: 465,
+            secure: true,
+            auth: {
+                user: "manager@warddirectory.org",
+                pass: "1 Nephi 3:7"
             }
         });
 
@@ -159,7 +171,7 @@ router.post("/login", async (req, res) => {
                 true);
             existingUser.save();
             return res.status(200).send({
-                message: "This is your first time logging in. We have sent an email to you to set your password."
+                message: "This is your first time logging in. We have sent an email to you to set your password. PLEASE CHECK YOUR SPAM FOLDER!!"
             });
         }
 
@@ -212,7 +224,7 @@ router.post("/forgot_password", async (req, res) => {
         });
         genTokenSendEmail(user, res);
         return res.status(200).send({
-            message: "We have sent an email to you to set your password."
+            message: "We have sent an email to you to set your password. PLEASE CHECK YOUR SPAM FOLDER!!"
         });
     } catch(error){
         console.log(error);
