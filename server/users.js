@@ -171,7 +171,7 @@ router.post("/login", async (req, res) => {
                 true);
             existingUser.save();
             return res.status(200).send({
-                message: "This is your first time logging in. We have sent an email to you to set your password. PLEASE CHECK YOUR SPAM FOLDER!!"
+                message: "This is your first time logging in. We have sent an email to you to set your password. NOTE: Please check your spam folder if nothing arrives!"
             });
         }
 
@@ -224,7 +224,7 @@ router.post("/forgot_password", async (req, res) => {
         });
         genTokenSendEmail(user, res);
         return res.status(200).send({
-            message: "We have sent an email to you to set your password. PLEASE CHECK YOUR SPAM FOLDER!!"
+            message: "We have sent an email to you to set your password. NOTE: Please check your spam folder if nothing arrives!"
         });
     } catch(error){
         console.log(error);
