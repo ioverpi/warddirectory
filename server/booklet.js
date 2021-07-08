@@ -16,6 +16,18 @@ const tempBookletPdf = path.resolve("./temp.pdf");
 const temp1BookletTek = path.resolve("./temp1.tex");
 const temp1BookletPdf = path.resolve("./temp1.pdf");
 
+let bookletType = "byapartment";
+
+function setBookletType(param){
+    switch(param){
+        case "alphabetical":
+            bookletType = "alphabetical";
+            break;
+        default:
+            bookletType = "byapartment";
+    }
+}
+
 // Booklet
 
 const Member = mongoose.model("Member");
@@ -23,6 +35,7 @@ const Ward = mongoose.model("Ward");
 
 router.get("/", auth.verifyToken, async (req, res) => {
     try{
+        setBookletType(req.query.type);
         await loadVariables(req.user_id);
         try{
             await fs.access(genBookletPdfName());
@@ -48,6 +61,7 @@ router.get("/", auth.verifyToken, async (req, res) => {
 
 router.get("/generate", [auth.verifyToken, auth2.permissionsGreaterThan(2)], async (req, res) => {
     try{
+        setBookletType(req.query.type);
         await genBooklet(req.user_id);
         return res.sendStatus(200);
     } catch(error){
@@ -58,7 +72,8 @@ router.get("/generate", [auth.verifyToken, auth2.permissionsGreaterThan(2)], asy
 
 router.get("/old", [auth.verifyToken, auth2.permissionsGreaterThan(2)], async (req, res) => {
     try{
-        const files = (await fs.readdir("./booklets")).filter(f => f.match(".pdf"));
+        setBookletType(req.query.type);
+        const files = (await fs.readdir("./booklets")).filter(f => f.match(`${bookletType}.pdf`));
         return res.status(200).send({
             booklets: files
         });
@@ -146,7 +161,7 @@ async function genBooklet(userId){
         frontCover: await createFrontCover(),
         bishopricPage: await createBishopricPage(),
         leadershipPage: await createLeadershipPage(),
-        apartmentPages: await createApartmentPageBlock("alphabetical"),
+        apartmentPages: await createApartmentPageBlock(bookletType),
         emergencyInfoPage: await createEmergencyInfoPage(),
         backCover: await createBackCover()
     }
@@ -175,7 +190,7 @@ function getSemester(){
 function genBookletPdfName(currSemester){
     let year = getYear();
     let semester = currSemester || getSemester();
-    return `./booklets/${semester}_${year}_${variables.name.replace(/ /g, "_")}_Ward.pdf`;
+    return `./booklets/${semester}_${year}_${variables.name.replace(/ /g, "_")}_Ward_${bookletType}.pdf`;
 }
 
 async function renamePDF(currSemester){
