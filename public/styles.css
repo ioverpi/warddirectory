@@ -153,6 +153,15 @@ body {
     color: white;
   }
 
+  .booklet .type {
+    background-color: #ffde25;
+    cursor: pointer;
+  }
+
+  .booklet .current{
+    background-color: #c5aa11;
+  }
+
   /* Login Form */
   .modal-mask {
     position: fixed;

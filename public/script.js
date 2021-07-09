@@ -38,7 +38,9 @@ var app = new Vue({
         hiddenMember: false,
         oldBooklets: [],
         batchData: "",
-        showBatchForm: false
+        showBatchForm: false,
+        bookletType: "byapartment",
+        bookletUpdate: 0
     },
     async created(){
         await this.getUser();
@@ -48,6 +50,18 @@ var app = new Vue({
             this.getWardName();
             this.getMembers();
         //this.getCallings();
+        }
+    },
+    computed: {
+        byapartment: function(){
+            return {
+                current: this.bookletType == "byapartment"
+            };
+        },
+        alphabetical: function(){
+            return {
+                current: this.bookletType == "alphabetical"
+            };
         }
     },
     methods: {
@@ -452,7 +466,7 @@ javascript: (function () {
         },
         async generateBooklet(){
             try{
-                let response = await axios.get("/api/booklet/generate");
+                let response = await axios.get(`/api/booklet/generate?type=${this.bookletType}`);
                 if(response.status == 200) {
                     alert("Successfully generated the booklet!") //Make something fancier here. :)
                 } 
@@ -463,11 +477,15 @@ javascript: (function () {
         },
         async getOldBooklets(){
             try{
-                let response = await axios.get("/api/booklet/old");
+                let response = await axios.get(`/api/booklet/old?type=${this.bookletType}`);
                 this.oldBooklets = response.data.booklets;
             } catch(error){
                 console.log(error);
             }
+        },
+        toggleBookletType(){
+            this.bookletType = this.bookletType == "byapartment" ? "alphabetical" : "byapartment";
+            this.getOldBooklets();
         }
     }
 })

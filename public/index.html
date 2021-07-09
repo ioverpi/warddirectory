@@ -199,7 +199,11 @@
             <!--div class="sidebar"-->
                 <div id="rightMenu" class="sidebarinner" style="right:0">
                     <div v-if="user" class="sidebarinnerinner booklet">
-                        <a href="/api/booklet">Download Current Booklet</a>
+                        <p>Booklet type:</p>
+                        <button type="button" class="type" :class="byapartment" @click="toggleBookletType" :disabled="byapartment.current">By Apartment</button>
+                        <button type="button" class="type" :class="alphabetical" @click="toggleBookletType" :disabled="alphabetical.current">Alphabetically</button>
+                        <div style="height: 30px;"></div>
+                        <a :href="'/api/booklet?type=' + bookletType">Download Current Booklet</a>
                         <br>
                         <div v-if="user.permissions > 2">
                             <p style="text-align: center;">Clerk tools</p>
