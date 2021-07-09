@@ -110,12 +110,12 @@ async function genTokenSendEmail(user, res) {
         */ 
 
         const transporter = nodemailer.createTransport({
-            host: "byu3.reclaimhosting.com",
-            port: 465,
+            host: process.env.EMAIL_HOST,
+            port: process.env.EMAIL_PORT,
             secure: true,
             auth: {
-                user: "manager@warddirectory.org",
-                pass: "1 Nephi 3:7"
+                user: process.env.EMAIL_ADDRESS,
+                pass: process.env.EMAIL_PASSWORD
             }
         });
 
