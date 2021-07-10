@@ -96,7 +96,7 @@ async function genTokenSendEmail(user, res) {
 
         if(process.env.DEBUG_MODE) {
             console.log(`${process.env.DEBUG_MODE?"http":"https"}://${process.env.SERVER_HOST}${(process.env.SERVER_PORT == 443 || process.env.SERVER_PORT == 80)?"":`:${process.env.SERVER_PORT}`}/api/users/reset/${token}`);
-            return;
+            //return;
         }
 
         /* Gmail is finnicky!!
@@ -111,7 +111,7 @@ async function genTokenSendEmail(user, res) {
 
         const transporter = nodemailer.createTransport({
             host: process.env.EMAIL_HOST,
-            port: process.env.EMAIL_PORT,
+            port: parseInt(process.env.EMAIL_PORT),
             secure: true,
             auth: {
                 user: process.env.EMAIL_ADDRESS,
@@ -125,7 +125,7 @@ async function genTokenSendEmail(user, res) {
         }
 
         const mailOptions = {
-            from: process.env.EMAIL_ADDRESS,
+            from: `"${process.env.MANAGER_NAME}" <${process.env.EMAIL_ADDRESS}>`,
             to: `${process.env.DEBUG_MODE?"kellon08@gmail.com":user.email}`, //For now, we don't want mail going to anybodies address. Maybe change this later.
             subject: `Link to Reset Password`,
             text: 
@@ -139,7 +139,9 @@ If you did not request this, please ignore this email and your password will rem
 `
         }
 
-        await transporter.sendMail(mailOptions);
+        let info = await transporter.sendMail(mailOptions);
+
+        if(process.env.DEBUG_MODE) console.log("Message sent: %s", info.messageId);
     } catch(error) {
         console.log(`Failed to send email to ${user.email}.`);
         console.log(error);
