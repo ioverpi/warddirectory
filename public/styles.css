@@ -155,7 +155,6 @@ body {
 
   .booklet .type {
     background-color: #ffde25;
-    cursor: pointer;
   }
 
   .booklet .current{
@@ -321,6 +320,7 @@ body {
     text-decoration: none;
     display: inline-block;
     padding: 15px 32px;
+    cursor:pointer;
   }
   
   button {
