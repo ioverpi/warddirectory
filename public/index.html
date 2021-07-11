@@ -29,7 +29,7 @@
                         <p v-if="message" class="message">{{message}}</p>
                         <label>Email</label>
                         <br>
-                        <input v-model="username">
+                        <input ref="user" v-model="username" @keyup="enterKey1">
                       </div>
                       <div class="modal-footer">
                         <button @click="verifyUsername" type="button">Continue</button>
@@ -52,7 +52,7 @@
                         <p v-if="message" class="message">{{message}}</p>
                         <label>Password</label>
                         <br>
-                        <input type="password" v-model="password">
+                        <input ref="pass" type="password" v-model="password" @keyup="enterKey2">
                       </div>
                       <div class="modal-footer">
                         <button @click="backForm" type="button" class="other">Back</button>

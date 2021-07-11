@@ -299,12 +299,27 @@ javascript: (function () {
                 console.log(error);
             }
         },
+        enterKey1(e){
+            if(e.keyCode === 13) {
+                this.verifyUsername();
+            }
+        },
+        enterKey2(e){
+            if(e.keyCode === 13) {
+                this.login();
+            }
+        },
         toggleForm(){
             this.error = "";
             this.message = "";
             this.username = "";
             this.password = "";
             this.showFormUsername = !this.showFormUsername;
+            if(this.showFormUsername){
+                this.$nextTick(() => {
+                    this.$refs.user.focus();
+                });
+            }
         },
         closeForm(){
             this.error = "";
@@ -375,6 +390,9 @@ javascript: (function () {
                     this.showFormUsername = false;
                     this.showFormPassword = true;
                     this.message = response.data.message;
+                    this.$nextTick(() => {
+                        this.$refs.pass.focus();
+                    })
                 }
             } catch(error){
                 this.error = error.response.data.message;
