@@ -3,7 +3,8 @@ var app = new Vue({
     data: {
         wardName: "",
         address: "",
-        showForm: false,
+        showFormUsername: false,
+        showFormPassword: false,
         showPhotoEditor: false,
         user: null,
         username: "",
@@ -34,7 +35,6 @@ var app = new Vue({
         callings: {},
         callingField: "",
         plainPhoto: null,
-        additionalLoginMessage: "First time logging in?",
         hiddenMember: false,
         oldBooklets: [],
         batchData: "",
@@ -304,8 +304,19 @@ javascript: (function () {
             this.message = "";
             this.username = "";
             this.password = "";
-            this.additionalLoginMessage = "First time logging in?";
-            this.showForm = !this.showForm;
+            this.showFormUsername = !this.showFormUsername;
+        },
+        closeForm(){
+            this.error = "";
+            this.message = "";
+            this.username = "";
+            this.password = "";
+            this.showFormUsername = false;
+            this.showFormPassword = false;
+        },
+        backForm(){
+            this.showFormUsername = true;
+            this.showFormPassword = false;
         },
         async togglePhotoEditor(hasPhoto){
             //Something...
@@ -350,7 +361,23 @@ javascript: (function () {
                 this.message = response.data.message;
             } catch(error){
                 this.error = error.response.data.message;
-                this.additionalLoginMessage = "Reset password?"
+            }
+        },
+        async verifyUsername(){
+            this.error = "";
+            this.message = "";
+            
+            try{
+                let response = await axios.post("/api/users/verify_username", {
+                    email: this.username
+                });
+                if(response.data.message) {
+                    this.showFormUsername = false;
+                    this.showFormPassword = true;
+                    this.message = response.data.message;
+                }
+            } catch(error){
+                this.error = error.response.data.message;
             }
         },
         async login(){
@@ -369,10 +396,9 @@ javascript: (function () {
                 this.getApartmentList();
                 this.getWardName();
                 this.getMembers();
-                this.toggleForm();
+                this.closeForm();
             } catch(error){
                 this.error = error.response.data.message;
-                this.additionalLoginMessage = "Reset password?"
             }
         },
         async logout(){

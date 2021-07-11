@@ -166,14 +166,13 @@ router.post("/login", async (req, res) => {
             });
 
         if(!existingUser.password) {
-            await genTokenSendEmail(existingUser, res);
-            existingUser.logEvent("Reset Password", 
+            existingUser.logEvent("No set Password", 
                 Date.now(), 
-                `Sent password reset email. Reason for the password reset: ${user.password?"Forgotten Password":"New user"}.`, 
+                "Looks like they didn't respond to the email.", 
                 true);
             existingUser.save();
-            return res.status(200).send({
-                message: "This is your first time logging in. We have sent an email to you to set your password. NOTE: Please check your spam folder if nothing arrives!"
+            return res.status(403).send({
+                message: obscureAuthMessage
             });
         }
 
@@ -196,6 +195,35 @@ router.post("/login", async (req, res) => {
         return res.sendStatus(500);
     }
 });
+
+router.post("/verify_username", async (req, res) => {
+    if(!req.body.email) //I want an email instead of a username now. 
+        return res.sendStatus(400);
+
+    try{
+        const existingUser = await User.findOne({
+            email: req.body.email
+        });
+
+        if(existingUser && !existingUser.password) {
+            await genTokenSendEmail(existingUser, res);
+            existingUser.logEvent("Reset Password", 
+                Date.now(), 
+                `Sent password reset email. Reason for the password reset: New user.`, 
+                true);
+            existingUser.save();
+        }
+
+        return res.status(200).send({
+            message: "If this is your first time logging in, " +
+            "we have sent an email to you to set your password. " +
+            "NOTE: Please check your spam folder if nothing arrives!"
+        });
+    } catch(error){
+        console.log(error);
+        return res.sendStatus(500);
+    }
+})
 
 router.delete("/", auth.verifyToken, async (req, res) => {
     const user = await User.findOne({

@@ -17,7 +17,7 @@
                 <option selected="false">Boo</option>
             </select-->
             <!--Login form-->
-            <transition v-if="showForm" name="modal">
+            <transition v-if="showFormUsername" name="modal">
                 <div class="modal-mask">
                   <div class="modal-wrapper">
                     <div class="modal-container">
@@ -28,17 +28,37 @@
                         <p v-if="error" class="error">{{error}}</p>
                         <p v-if="message" class="message">{{message}}</p>
                         <label>Email</label>
-                        <br />
-                        <input v-model="username">
                         <br>
+                        <input v-model="username">
+                      </div>
+                      <div class="modal-footer">
+                        <button @click="verifyUsername" type="button">Continue</button>
+                        <button @click="toggleForm" type="button" class="close">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </transition>
+
+            <transition v-if="showFormPassword" name="modal">
+                <div class="modal-mask">
+                  <div class="modal-wrapper">
+                    <div class="modal-container">
+                      <div class="modal-header">
+                        <h1 class="modal-title">Register or Login</h1>
+                      </div>
+                      <div class="modal-body">
+                        <p v-if="error" class="error">{{error}}</p>
+                        <p v-if="message" class="message">{{message}}</p>
                         <label>Password</label>
                         <br>
                         <input type="password" v-model="password">
                       </div>
                       <div class="modal-footer">
-                        <button @click="forgotPassword" type="button">{{additionalLoginMessage}}</button>
+                        <button @click="backForm" type="button" class="other">Back</button>
+                        <button @click="forgotPassword" type="button">Forgot Password?</button>
                         <button @click="login" type="button" class="other">Login</button>
-                        <button @click="toggleForm" type="button" class="close">Close</button>
+                        <button @click="closeForm" type="button" class="close">Close</button>
                       </div>
                     </div>
                   </div>
