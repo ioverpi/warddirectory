@@ -28,6 +28,26 @@ async function login(user, res){
         .status(200).send(user);
 }
 
+// Fire-and-forget analytics: record one row per successful login. Behind the
+// Cloudflare tunnel the real client IP arrives in the CF-Connecting-IP header;
+// fall back to X-Forwarded-For / the socket IP for local runs.
+async function recordLogin(user, req) {
+    try {
+        const LoginStat = mongoose.model("LoginStat");
+        const ip = req.headers["cf-connecting-ip"]
+            || (req.headers["x-forwarded-for"] || "").split(",")[0].trim()
+            || req.ip;
+        await new LoginStat({
+            email: user.email,
+            at: Date.now(),
+            ip: ip,
+            userAgent: req.headers["user-agent"] || ""
+        }).save();
+    } catch (error) {
+        console.log("Failed to record login stat:", error.message);
+    }
+}
+
 router.get("/", auth.verifyToken, async (req, res) => {
     const user = await User.findOne({
         _id: req.user_id
@@ -189,6 +209,7 @@ router.post("/login", async (req, res) => {
             });
         }
 
+        recordLogin(existingUser, req);
         login(existingUser, res);
     } catch(error){
         console.log(error);

@@ -26,6 +26,7 @@ app.use(cookieParser());
 require("./member_model.js").makeModel();
 require("./ward_model.js").makeModel();
 require("./old_email_model.js").makeModel();
+require("./login_stat_model.js").makeModel();
 const auth = require("./auth.js");
 
 const members = require('./members.js');
@@ -36,6 +37,9 @@ app.use("/api/info", info);
 
 const users = require("./users.js");
 app.use("/api/users", users);
+
+const stats = require("./stats.js");
+app.use("/api/stats", stats);
 
 app.use("/photos", auth.verifyToken);
 app.use("/photos", express.static("../photos"));
