@@ -50,18 +50,22 @@ services:
       mongo:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      # Host port is configurable; the container always listens on 3000.
+      - "${APP_PORT:-3000}:3000"
     environment:
       MONGO_DB_URL: mongodb://mongo:27017/warddir
-      JWT_SECRET: demo-only-secret-change-me
+      # Secrets read from an optional .env file next to this compose file.
+      # The :-defaults keep the demo runnable with no .env present; set real
+      # values in .env (git-ignored) before exposing the demo. See .env.example.
+      JWT_SECRET: ${JWT_SECRET:-demo-only-secret-change-me}
       SERVER_PORT: "3000"
       SERVER_PORT_EXTERNAL: "3000"
       SERVER_HOST: localhost
       DEBUG_MODE: "1"
       MANAGER_NAME: Ward Clerk
       # Secret for the owner-only login analytics endpoint:
-      #   GET /api/stats?token=<STATS_TOKEN>   -> change this before going public
-      STATS_TOKEN: change-me-stats-token
+      #   GET /api/stats?token=<STATS_TOKEN>
+      STATS_TOKEN: ${STATS_TOKEN:-change-me-stats-token}
       # Email is only used for password-reset flows, which the demo logins
       # don't need. Placeholder values keep nodemailer from crashing if hit.
       EMAIL_HOST: smtp.example.com

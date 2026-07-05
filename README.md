@@ -63,8 +63,19 @@ docker compose down -v
   GET /api/stats?token=<STATS_TOKEN>
   ```
 
-  `STATS_TOKEN` is set in `docker-compose.yml`; **change it from the default
-  before exposing the demo.**
+- **Configuration & secrets.** The demo runs with safe defaults out of the box.
+  To override the host port or set real secrets, copy `.env.example` to `.env`
+  (git-ignored) and fill in values — `docker-compose` reads it automatically:
+
+  ```
+  JWT_SECRET=...      # signs session cookies; openssl rand -hex 32
+  STATS_TOKEN=...      # protects /api/stats (see above)
+  APP_PORT=3000        # host port; the container always listens on 3000
+  ```
+
+  **Set real `JWT_SECRET` and `STATS_TOKEN` values before exposing the demo.**
+  Apply changes with `docker compose up -d` (a plain `restart` won't pick up
+  compose/env edits).
 
 - **Resource limits.** The app and database have CPU/memory/pid caps in
   `docker-compose.yml` so a burst of booklet generation or uploads can't starve
