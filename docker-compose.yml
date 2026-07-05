@@ -1,0 +1,73 @@
+# One-command Ward Directory demo:  docker compose up --build
+#
+#   - mongo : database (v4.4, widest compatibility with the app's mongoose 5 driver)
+#   - app   : seeds the demo ward on startup, then serves at http://localhost:3000
+#
+# The app container reseeds the database (and regenerates the demo photos) every
+# time it starts, so the demo always begins in a known-good state.
+#
+# photos/ and booklets/ intentionally live on the container's own filesystem
+# rather than named volumes: the app moves files into them with rename(), which
+# fails with EXDEV across a volume mount. They don't need to persist for a demo.
+#
+# Demo logins (created by the seed):
+#   Clerk  (full access): clerk@warddir.demo  / demo1234
+#   Member (read-only):   member@warddir.demo / demo1234
+
+services:
+  mongo:
+    image: mongo:4.4
+    restart: unless-stopped
+    # Cap resources so nothing on this self-hosted box can be starved.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  app:
+    build: .
+    restart: unless-stopped
+    # Seed the demo data, then start the server (both share the container fs).
+    command: sh -c "node /app/seed/seed.js && node server.js"
+    # Cap resources so a flood of pdflatex booklet builds (CPU) or uploads
+    # (memory/pids) can't take down the host. Pair this with a Cloudflare
+    # rate-limit rule at the edge for the initial low-traffic iteration.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 768M
+          pids: 256
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_DB_URL: mongodb://mongo:27017/warddir
+      JWT_SECRET: demo-only-secret-change-me
+      SERVER_PORT: "3000"
+      SERVER_PORT_EXTERNAL: "3000"
+      SERVER_HOST: localhost
+      DEBUG_MODE: "1"
+      MANAGER_NAME: Ward Clerk
+      # Secret for the owner-only login analytics endpoint:
+      #   GET /api/stats?token=<STATS_TOKEN>   -> change this before going public
+      STATS_TOKEN: change-me-stats-token
+      # Email is only used for password-reset flows, which the demo logins
+      # don't need. Placeholder values keep nodemailer from crashing if hit.
+      EMAIL_HOST: smtp.example.com
+      EMAIL_PORT: "587"
+      EMAIL_ADDRESS: noreply@example.com
+      EMAIL_PASSWORD: unused
+
+volumes:
+  mongo-data:

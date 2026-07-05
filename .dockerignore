@@ -1,0 +1,11 @@
+.git
+node_modules
+npm-debug.log
+*.env
+*.envbackup
+.vs
+# Generated at runtime / seed time
+photos/*.jpg
+server/booklets/*.pdf
+server/temp*.*
+temp*.*
