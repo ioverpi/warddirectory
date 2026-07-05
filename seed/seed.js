@@ -13,9 +13,11 @@
  *     `street;city` address, and a spouse sharing their last name.
  *   - The Leadership page needs a member with calling "Ward Clerks;Ward Clerk"
  *     plus a spouse.
- * Spouses and the clerk couple are marked hidden with no apartment so they only
- * feed the booklet's "His & Hers" layout and never appear in the browse UI or
- * the member listings (both of which exclude hidden / Bishopric members).
+ * Spouses and the clerk couple are marked hidden and given an off-directory
+ * apartment (OFF_DIRECTORY_APT) so they only feed the booklet's "His & Hers"
+ * layout and never appear in the browse UI or the member listings. Note: they
+ * must NOT use apt "" -- the front-end's initial view calls filterMembers(""),
+ * so empty-apartment members would render on first load.
  *
  * Reuses the real Mongoose models (server/*_model.js) so the demo accounts get
  * the same bcrypt password hashing as production logins.
@@ -45,6 +47,12 @@ const PHOTO_DIR = path.resolve(__dirname, "../photos");
 // 4, which the print-imposition step (genPages in booklet.js) requires.
 const apartments = ["Maple Court 4A", "Maple Court 4B", "Cedar Ridge 12"];
 
+// Booklet-only helper records (Bishopric spouses + the Ward Clerk couple) get
+// this off-directory apartment so no filter ever surfaces them. It must not be
+// "" (the front-end's initial filterMembers value), "Bishopric", or a real
+// apartment. Combined with hidden: true they stay out of both booklet listings.
+const OFF_DIRECTORY_APT = "Leadership";
+
 // Leadership tab / booklet leadership page read this (stored as a JSON string).
 const callings = {
   "Elders Quorum": { "President": null, "1st Counselor": null, "2nd Counselor": null },
@@ -60,15 +68,15 @@ const roster = [
   { avatar: "avatar_03", firstname: "Samuel", lastname: "Petrov",    apt: "Bishopric", phone: "(801) 555-0132", email: "samuel.petrov@example.com",    address: "217 Birchwood Ave;Orem, UT",  calling: "Bishopric;2nd Counselor" },
   { avatar: "avatar_04", firstname: "Thomas", lastname: "Bennett",   apt: "Bishopric", phone: "(801) 555-0143", email: "thomas.bennett@example.com",   address: "540 Oakmont St;Provo, UT",    calling: "Bishopric;Assigned Stake High Counselor" },
 
-  // --- Bishopric spouses: hidden, no apartment (booklet name lookup only) ---
-  { avatar: "avatar_05", firstname: "Rachel", lastname: "Whitfield", apt: "", phone: "(801) 555-0110", email: "rachel.whitfield@example.com", hidden: true },
-  { avatar: "avatar_06", firstname: "Naomi",  lastname: "Osei",      apt: "", phone: "(801) 555-0121", email: "naomi.osei@example.com",      hidden: true },
-  { avatar: "avatar_07", firstname: "Elena",  lastname: "Petrov",    apt: "", phone: "(801) 555-0132", email: "elena.petrov@example.com",    hidden: true },
-  { avatar: "avatar_08", firstname: "Grace",  lastname: "Bennett",   apt: "", phone: "(801) 555-0143", email: "grace.bennett@example.com",   hidden: true },
+  // --- Bishopric spouses: hidden + off-directory (booklet name lookup only) ---
+  { avatar: "avatar_05", firstname: "Rachel", lastname: "Whitfield", apt: OFF_DIRECTORY_APT, phone: "(801) 555-0110", email: "rachel.whitfield@example.com", hidden: true },
+  { avatar: "avatar_06", firstname: "Naomi",  lastname: "Osei",      apt: OFF_DIRECTORY_APT, phone: "(801) 555-0121", email: "naomi.osei@example.com",      hidden: true },
+  { avatar: "avatar_07", firstname: "Elena",  lastname: "Petrov",    apt: OFF_DIRECTORY_APT, phone: "(801) 555-0132", email: "elena.petrov@example.com",    hidden: true },
+  { avatar: "avatar_08", firstname: "Grace",  lastname: "Bennett",   apt: OFF_DIRECTORY_APT, phone: "(801) 555-0143", email: "grace.bennett@example.com",   hidden: true },
 
-  // --- Ward Clerk couple: hidden, no apartment (feeds Leadership page) ---
-  { avatar: "avatar_09", firstname: "David",  lastname: "Reyes",     apt: "", phone: "(801) 555-0150", email: "david.reyes@example.com", hidden: true, calling: "Ward Clerks;Ward Clerk" },
-  { avatar: "avatar_10", firstname: "Sonia",  lastname: "Reyes",     apt: "", phone: "(801) 555-0150", email: "sonia.reyes@example.com", hidden: true },
+  // --- Ward Clerk couple: hidden + off-directory (feeds Leadership page) ---
+  { avatar: "avatar_09", firstname: "David",  lastname: "Reyes",     apt: OFF_DIRECTORY_APT, phone: "(801) 555-0150", email: "david.reyes@example.com", hidden: true, calling: "Ward Clerks;Ward Clerk" },
+  { avatar: "avatar_10", firstname: "Sonia",  lastname: "Reyes",     apt: OFF_DIRECTORY_APT, phone: "(801) 555-0150", email: "sonia.reyes@example.com", hidden: true },
 
   // --- Maple Court 4A --- (includes the demo CLERK login)
   { avatar: "avatar_11", firstname: "Demo",   lastname: "Clerk",     apt: "Maple Court 4A", phone: "(801) 555-0161", email: "clerk@warddir.demo",         permissions: 4, password: "demo1234" },
