@@ -11,7 +11,7 @@ const path = require("path");
 
 const User = mongoose.model("Member"); //We are making members users. 
 
-async function login(user, res){
+async function login(user, res, req){
     let token = auth.generateToken({
         id: user._id
     }, "24h");
@@ -21,9 +21,17 @@ async function login(user, res){
     user.logEvent("Login", Date.now(), "Logged in successfully!", true);
     await user.save();
 
+    // Behind the Cloudflare tunnel the browser->edge hop is HTTPS and the edge
+    // sets x-forwarded-proto=https, so mark the cookie Secure there. Over plain
+    // http://localhost (local testing) it stays off so login still works.
+    const secure = !!(req && (req.secure || req.headers["x-forwarded-proto"] === "https"));
+
     return res
         .cookie("token", token, {
-            expires: new Date(Date.now() + 86400 * 1000)
+            expires: new Date(Date.now() + 86400 * 1000),
+            httpOnly: true,   // not readable by JS; the browser sends it automatically
+            sameSite: "lax",  // CSRF hardening; fine for the same-origin SPA
+            secure: secure
         })
         .status(200).send(user);
 }
@@ -210,7 +218,7 @@ router.post("/login", async (req, res) => {
         }
 
         recordLogin(existingUser, req);
-        login(existingUser, res);
+        login(existingUser, res, req);
     } catch(error){
         console.log(error);
         return res.sendStatus(500);
